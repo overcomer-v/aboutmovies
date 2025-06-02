@@ -1,17 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Navbar() {
+function Navbar({ openNavBar, setNavbarOpen }) {
+  const [pickedOptionsKey, setPickedOptionsKey] = useState(() => {
+    const lastOptionKey = sessionStorage.getItem("option-key");
+    if (lastOptionKey) {
+      return parseInt(lastOptionKey);
+    } else {
+      return 0;
+    }
+  });
 
-  const [pickedOptionsKey, setPickedOptionsKey] = useState(0);
+  useEffect(() => {
+    sessionStorage.setItem("option-key", pickedOptionsKey.toString());
+  }, [pickedOptionsKey]);
 
   return (
-    <nav className="bg-neutral-900 w- h-[95vh] flex flex-col py-6 px-4 rounded-3xl sticky m-auto">
-      <div className="brand-name flex items-center mb-4 gap-4">
-        <i className="fa fa-bullseye text-xl"></i>
-        <h2 className="font-semibold text-xl">
-          About<span className="font-light opacity-[0.7]">Movies</span>
-        </h2>
+    <nav
+      className={`bg-neutral-900  absolute lg:w-full ${
+        openNavBar ? " left-[0]" : "-left-3/4"
+      } h-full z-[1000] flex w-3/4 flex-col py-6 px-4 lg:sticky m-auto transition-all ease-in-out duration-500`}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="brand-name flex items-center gap-4">
+          <i className="fa fa-bullseye text-xl color-default"></i>
+          <h2 className="font-semibold text-xl">
+            About<span className="font-light opacity-[0.7]">Movies</span>
+          </h2>
+        </div>
+        <i
+          className="fa fa-close"
+          onClick={() => {
+            setNavbarOpen(false);
+          }}
+        ></i>
       </div>
 
       <span className="bg-white w-full h-[0.5px] my-4 opacity-[0.2]"></span>
@@ -23,9 +45,10 @@ function Navbar() {
         to={"/"}
       ></NavOptionsCard>
       <NavOptionsCard
-        label={"Recently"}
+        label={"Upcoming"}
         iconClass={"fa-clock"}
         id={1}
+        to={"/upcoming-page"}
       ></NavOptionsCard>
       <NavOptionsCard
         label={"Trending"}
@@ -37,34 +60,36 @@ function Navbar() {
         label={"Popular"}
         iconClass={"fa-video"}
         id={3}
+        to={"/popular-page"}
       ></NavOptionsCard>
       <NavOptionsCard
-        label={"Suggested"}
+        label={"TopMovies"}
         iconClass={"fa-bullseye"}
         id={4}
+        to={"/topmovies-page"}
       ></NavOptionsCard>
 
-<span className="bg-white w-full h-[0.5px] my-4 opacity-[0.2]"></span>
+      <span className="bg-white w-full h-[0.5px] my-4 opacity-[0.2]"></span>
 
-<NavOptionsCard
+      <NavOptionsCard
         label={"About Us"}
         iconClass={"fa-bullseye"}
-        id={4}
+        id={5}
+        to={"/aboutus-page"}
       ></NavOptionsCard>
 
-<NavOptionsCard
+      <NavOptionsCard
         label={"Contact Us"}
         iconClass={"fa-bullseye"}
-        id={4}
+        id={6}
       ></NavOptionsCard>
-
     </nav>
   );
 
   function NavOptionsCard({ label, iconClass, id, to }) {
     let bgColor = "bg-transparent";
     if (pickedOptionsKey === id) {
-      bgColor = "bg-neutral-800";
+      bgColor = "bg-default";
     }
 
     const navigate = useNavigate();
@@ -75,6 +100,7 @@ function Navbar() {
         onClick={() => {
           setPickedOptionsKey(id);
           navigate(to);
+          setNavbarOpen(false);
         }}
         className={`flex gap-7 items-center py-4 px-4 rounded-2xl mb-1 cursor-pointer ${bgColor}`}
       >
@@ -84,7 +110,5 @@ function Navbar() {
     );
   }
 }
-
-
 
 export default Navbar;

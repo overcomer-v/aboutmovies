@@ -4,7 +4,11 @@ export default {
     "./src/**/*.{js,jsx,ts,tsx}","index.html"
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily:{
+        nunito:["Nunito"],
+      }
+    },
   },
   plugins: [],
 }

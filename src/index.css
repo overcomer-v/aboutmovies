@@ -3,14 +3,36 @@
   line-height: 1.5;
   font-weight: 400;
 
+  background-color: black;
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: rgb(10, 10, 10);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/nunito-Bold.ttf");
+  font-weight: bold;
+  font-style:normal;
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/nunito-Regular.ttf");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/nunito_lightRegular.ttf");
+  font-weight: 300;
+  font-style: normal;
 }
 
 .truncate-multiline {
@@ -20,6 +42,56 @@
   line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.truncate-threeline {
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.trunicate-oneline {
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.spinner{
+  background-image: url("../public/images/20250531_115419.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  width: 80px;
+  height: 80px;
+  animation: spin 2s linear infinite;
+}
+
+.bd-default{
+  border-color: rgb(184, 12, 12);
+}
+
+.bg-default{
+
+  background-color: rgb(184, 12, 12);
+}
+
+.bg-default:hover{
+    background-color: rgb(185, 62, 62);
+
+}
+
+.color-default{
+  color: rgb(184, 12, 12);
+}
+
+@keyframes spin {
+  0% {transform: rotate(0deg);}
+  100% {transform: rotate(360deg);}
 }
 
 @tailwind base;

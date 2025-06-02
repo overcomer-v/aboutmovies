@@ -1,53 +1,92 @@
 import { useEffect, useState } from "react";
-import { fetchNowPlayingMovies } from "../hooks/loader";
+import { fetchNowPlayingMovies } from "../hooks/movies";
+import { HorizontalCard } from "../components/Horizontal-Card";
+import { fetchOnAirTvs } from "../hooks/tvShows";
+import { CategoriesUi } from "../components/CategriesUi";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function Trending() {
+  const navigator = useNavigate();
+
   const [trendingMoviesList, setTrendingMoviesList] = useState([]);
+  const [trendingTvsList, setTrendingTvsList] = useState([]);
+
+  const [tvPageNo, setTvPageNo] = useState(1);
+  const [moviesPageNo, setMoviesPageNo] = useState(1);
+
+  const [loading, setLoading] = useState(true);
+  
+ const location = useLocation();
+  const [type, setType] = useState(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const reqType = queryParams.get("type");
+    return reqType ? reqType : "Movies";
+  });
 
   useEffect(() => {
-    loadTrendingMovies();
-  }, []);
+   loadTrendingMovies();
+  }, [moviesPageNo],[]);
+
+
+
+  useEffect(() => {
+    loadTrendingTvs();
+  }, [tvPageNo]);
+
+  function morePage() {
+    type === "Movies"
+      ? setMoviesPageNo((e) => e + 1)
+      : setTvPageNo((e) => e + 1);
+  }
 
   function loadTrendingMovies() {
-    fetchNowPlayingMovies().then((res) => setTrendingMoviesList(res));
+    setLoading(true);
+    fetchNowPlayingMovies(moviesPageNo).then((res) => {
+      setLoading(false);
+      setTrendingMoviesList((e) => [...e, ...res]);
+      
+    });
+  }
+
+function loadTrendingTvs() {
+    setLoading(true);
+    fetchOnAirTvs(moviesPageNo).then((res) => {
+      setLoading(false);
+      setTrendingTvsList((e) => [...e, ...res]);
+      
+    });
+  }
+
+   function navigateToAbout({ e }) {
+
+    if (type === "Movies") {
+
+
+      const id = trendingMoviesList[e].id;
+      console.log(id)
+      const genreId = trendingMoviesList[e].genre_ids[0];
+      navigator(`/movie-info?movieid=${id}&genreid=${genreId}`);
+    } else if (type === "TvShows") {
+
+       const id = trendingTvsList[e].id;
+      const genreId = trendingTvsList[e].genre_ids[0];
+      navigator(`/tvshow-info?tvid=${id}&tv-genreid=${genreId}`);
+    }
   }
 
   return (
-    <main>
-      <div className="flex flex-col gap-8">
-        {" "}
-        {trendingMoviesList.map((trendingMovie, index) => (
-          <HorizontalCard
-            key={index}
-            date={trendingMovie.release_date}
-            imgSrc={`https://image.tmdb.org/t/p/w500/${trendingMovie.poster_path}`}
-            title={trendingMovie.title}
-            desc={trendingMovie.overview}
-            ratings={trendingMovie.vote_average}
-          ></HorizontalCard>
-        ))}
-      </div>
-    </main>
+     <CategoriesUi
+            itemsList={type === "Movies" ? trendingMoviesList : trendingTvsList}
+            morePage={morePage}
+            isloading={loading}
+            listType={type}
+            setListType={setType}
+            onItemsClick={(e)=>{
+              navigateToAbout({e:e})
+            }}
+          ></CategoriesUi>
   );
 }
 
-function HorizontalCard({ imgSrc, title, date, ratings, desc }) {
-  return (
-    <div className="flex h-36 gap-6 items-center">
-      <img className="w-fit h-full rounded-lg" src={imgSrc} alt="" />
-      <div className="flex flex-col gap-2">
-        <h2 className="font-bold text-xl">{title}</h2>
-        <p className="w-[90%] mb-3 text-sm opacity-70">{desc}</p>
-        <div className="flex gap-12">
-          <p>{date}</p>
-          <div className="flex items-center gap-2 mr-12">
-            <i className="fa fa-star"></i>
-            <p>{ratings.toString().slice(0,3)}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default Trending;
