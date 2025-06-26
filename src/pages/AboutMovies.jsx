@@ -119,7 +119,7 @@ export function AboutMovies() {
             <p className="opacity-60 mt-2 text-sm">Duration : 2h50m</p>
           </section>
 
-          <section id="casts-sec" className="flex flex-col px-2 ">
+          <section id="casts-sec" className="flex flex-col px-2">
             <Subtitle label={"Casts"}></Subtitle>
 
             <div className="flex gap-x-2 no-scrollbar overflow-x-auto ">
@@ -129,7 +129,7 @@ export function AboutMovies() {
                   rel="noopener noreferrer"
                   href={`https://www.google.com/search?q=${cast.name}`}
                   key={index}
-                  className="flex flex-col flex-shrink-0 w-[35%] md:w-[16%] h-fit p-4 bg-neutral-900 bg-opacity-50 rounded-xl items-center"
+                  className="flex flex-col flex-shrink-0 transition-transform duration-300 hover:scale-95 w-[35%] md:w-[16%] h-fit p-4 bg-neutral-900 bg-opacity-50 rounded-xl items-center"
                 >
                   <img
                     className="mb-3 rounded-md"

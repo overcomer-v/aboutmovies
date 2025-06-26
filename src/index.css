@@ -63,7 +63,7 @@
 }
 
 .spinner{
-  background-image: url("../public/images/20250531_115419.png");
+  background-image: url("../images/20250531_115419.png");
   background-size: cover;
   background-repeat: no-repeat;
   width: 80px;
@@ -81,8 +81,7 @@
 }
 
 .bg-default:hover{
-    background-color: rgb(185, 62, 62);
-
+    background-color: rgb(109, 12, 12);
 }
 
 .color-default{

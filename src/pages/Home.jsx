@@ -349,7 +349,7 @@ function SmallCard({ imgSrc, title, date, ratings, isTvShows, onClick }) {
       onClick={() => {
         onClick();
       }}
-      className="flex w-full flex-col cursor-pointer no-scrollbar flex-shrink-0 "
+      className="flex w-full flex-col transition-transform duration-300 hover:scale-95 cursor-pointer no-scrollbar flex-shrink-0 "
     >
       <img
         className="w-full md:h-[400px] h-[200px] object-cover rounded-lg mb-3"

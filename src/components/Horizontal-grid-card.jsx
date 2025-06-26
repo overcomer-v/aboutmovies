@@ -1,6 +1,6 @@
 export function HorizontalGridCard({ imgSrc, title, date, ratings, desc }) {
     return (
-      <div className="flex lg:w-[450px] w-[350px] h-[300px]">
+      <div className="flex lg:w-[450px] w-[350px] h-[300px] transition-transform duration-300 hover:scale-95">
         <img className="w-[40%] object-cover h-full rounded-lg mr-4" src={imgSrc} alt="" />
         <div className="flex flex-col gap-2">
           <h2 className="font-bold text-xl font-nunito">{title}</h2>

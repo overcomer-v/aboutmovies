@@ -127,7 +127,7 @@ export function AboutTvShows() {
                   rel="noopener noreferrer"
                   href={`https://www.google.com/search?q=${cast.name}`}
                   key={index}
-                  className="flex flex-col flex-shrink-0 w-[35%] md:w-[16%] h-fit p-4 bg-neutral-900 bg-opacity-50 rounded-xl items-center"
+                  className="flex flex-col transition-transform duration-300 hover:scale-95 flex-shrink-0 w-[35%] md:w-[16%] h-fit p-4 bg-neutral-900 bg-opacity-50 rounded-xl items-center"
                 >
                   <img
                     className="mb-3 rounded-md"

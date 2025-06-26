@@ -9,7 +9,7 @@ export function HorizontalCard({
   return (
     <div
       onClick={onClick}
-      className="flex h-fit gap-6 cursor-pointer items-center bg-neutral-900 py-4 px-4 rounded-lg"
+      className="flex transition-transform duration-300 hover:scale-95 h-fit gap-6 cursor-pointer items-center bg-neutral-900 py-4 px-4 rounded-lg"
     >
       <img
         className="w-fit h-32 md:h-44 rounded-lg"

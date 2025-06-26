@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export function MediumCard({ imgSrc, title, date, desc, ratings,onClick }) {
     return (
-      <div className="lg:w-1/3 w-2/3 flex flex-col cursor-pointer justify-between flex-shrink-0 " onClick={onClick}>
+      <div className="lg:w-1/3 w-2/3 transition-transform duration-300 hover:scale-95 flex flex-col cursor-pointer justify-between flex-shrink-0 " onClick={onClick}>
         <img
           className="w-full object-cover  rounded-2xl mb-3"
           src={imgSrc}
