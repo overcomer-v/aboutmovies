@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { HorizontalCard } from "../components/Horizontal-Card";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchSearchQuery } from "../hooks/api";
+import { Spinner } from "../components/Spinner";
 
 function ResultsPage() {
   const [searchResults, setSearchResults] = useState([]);
@@ -76,7 +77,7 @@ function ResultsPage() {
   }
 
   return loading ? (
-    <div className="spinner mx-auto"></div>
+    <Spinner className={"text-5xl opacity-85"} />
   ) : searchResults.length === 0 ? (
     <div className="flex flex-col items-center">
       <i className="fa fa-file-fragment text-8xl mb-4"></i>

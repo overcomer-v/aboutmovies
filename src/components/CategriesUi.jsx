@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchMovieGenres } from "../hooks/movies";
 import { HorizontalCard } from "./Horizontal-Card";
 import { GenreListCard } from "./CategoriesCard";
+import { Spinner } from "./Spinner";
 
 export function CategoriesUi({
   itemsList,
@@ -25,7 +26,7 @@ export function CategoriesUi({
     <>
       {" "}
       {isloading ? (
-        <div className="spinner mx-auto"></div>
+        <Spinner className={"text-5xl opacity-80"}/>
       ) : (
         <main className="flex flex-col">
           {listType ? (

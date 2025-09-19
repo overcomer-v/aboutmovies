@@ -4,6 +4,7 @@ import { Subtitle } from "../components/Subtitle";
 import { MediumCard } from "../components/Medium-H-Card";
 import { useMoviesInfo } from "../hooks/movies";
 import { useEffect } from "react";
+import { Spinner } from "../components/Spinner";
 
 export function AboutMovies() {
   const navigateTo = useNavigate();
@@ -25,9 +26,7 @@ export function AboutMovies() {
   return (
     <div className="pb-32">
       {movieDetails.isLoading ? (
-        <div>
-          <div className="spinner mx-auto"></div>
-        </div>
+       <Spinner className={"text-6xl opacity-85"}/>
       ) : (
         <div
           className="flex flex-col w-f

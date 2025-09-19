@@ -3,6 +3,7 @@ import { GenreListCard } from "../components/CategoriesCard";
 import { Subtitle } from "../components/Subtitle";
 import { useTvsInfo } from "../hooks/tvShows";
 import { MediumCard } from "../components/Medium-H-Card";
+import { Spinner } from "../components/Spinner";
 
 export function AboutTvShows() {
   const navigateTo = useNavigate();
@@ -22,9 +23,7 @@ export function AboutTvShows() {
   return (
     <div className="pb-32">
       {tvDetails.isLoading ? (
-        <div>
-          <div className="spinner mx-auto"></div>
-        </div>
+       <Spinner className={"text-6xl opacity-85"}/>
       ) : (
         <div className="flex flex-col w-full h-fit">
           <section

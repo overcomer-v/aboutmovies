@@ -16,6 +16,7 @@ import {
   fetchTopTvs,
   fetchTvTrailers,
 } from "../hooks/tvShows";
+import { Spinner } from "../components/Spinner";
 
 function Home() {
   const [popularMoviesList, setPopularMoviesList] = useState([]);
@@ -98,7 +99,7 @@ function Home() {
   }
 
   return loading ? (
-    <div className="left-1/2 top-1/2 spinner fixed"></div>
+    <Spinner className={"text-5xl opacity-80"}></Spinner>
   ) : (
     <main className="flex flex-col w-full h-full bg">
   
