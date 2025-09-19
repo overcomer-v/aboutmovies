@@ -304,7 +304,7 @@ function BigCard({ imgSrc, tile, desc, onTrailerClick, voteAverage, releaseDate,
         src={imgSrc}
         alt=""
       />
-      <div className="bg-black w-full h-full absolute opacity-30"></div>
+      <div className="bg-black w-full h-full absolute opacity-50"></div>
       <div className="absolute lg:bottom-10 lg:left-10 bottom-4 left-4">
         {" "}
           <div className="flex md:mb-1 items-center  h-8 text-center [&_p]:text-xs flex-wrap">

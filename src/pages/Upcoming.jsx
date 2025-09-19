@@ -45,6 +45,7 @@ function UpcomingPage() {
   return (
     <CategoriesUi
       itemsList={upcomingMoviesList}
+      listType={"Movies"}
       morePage={morePage}
       isloading={loading}
       onItemsClick={(index)=>{

@@ -21,7 +21,6 @@ export function CategoriesUi({
   function loadGenreList() {
     fetchMovieGenres().then((res) => setGenreList(res));
   }
-
   return (
     <>
       {" "}
@@ -29,7 +28,7 @@ export function CategoriesUi({
         <Spinner className={"text-5xl opacity-80"}/>
       ) : (
         <main className="flex flex-col">
-          {listType ? (
+          {setListType ? (
             <TypeTab type={listType} setType={setListType}></TypeTab>
           ) : (
             ""
