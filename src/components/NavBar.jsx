@@ -20,12 +20,17 @@ function Navbar({ openNavBar, setNavbarOpen }) {
   useEffect(() => {
     function handleOffsiteClick(e) {
       if (navRef.current && !navRef.current.contains(e.target)) {
+        e.stopPropagation();
+        e.preventDefault();
         setNavbarOpen(false);
       }
     }
-    setTimeout(() => {
+   
+    if (openNavBar) {
+       setTimeout(() => {
       document.addEventListener("click", handleOffsiteClick);
     }, 100);
+    }
 
     return () => {
       document.removeEventListener("click", handleOffsiteClick);
@@ -34,11 +39,14 @@ function Navbar({ openNavBar, setNavbarOpen }) {
 
   return (
     <nav
-      ref={navRef}
-      className={`bg-neutral-900  absolute lg:w-full ${
-        openNavBar ? " left-[0]" : "-left-3/4"
-      } h-full z-[1000] flex w-3/4 flex-col py-6 px-4 lg:sticky m-auto transition-all ease-in-out duration-500`}
+      
+      className={` absolute lg:w-full ${
+        openNavBar ? " left-[0] right-0" : "-left-[100vw]"
+      } h-full z-[1000] flex w-full flex-col lg:fixed m-auto transition-all ease-in-out duration-1000`}
     >
+
+      <div ref={navRef} className="w-3/4 bg-neutral-900 h-full py-6 px-4">
+
       <div className="flex items-center justify-between mb-4">
         <div className="brand-name flex items-center gap-4">
           <i className="fa fa-bullseye text-xl color-default"></i>
@@ -101,6 +109,7 @@ function Navbar({ openNavBar, setNavbarOpen }) {
         iconClass={"fa-bullseye"}
         id={6}
       ></NavOptionsCard>
+      </div>
     </nav>
   );
 

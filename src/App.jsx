@@ -21,7 +21,7 @@ const [openNavBar, setNavBarOpen] = useState(false);
     <>
       <HashRouter>
         {" "}
-        <div className="grid lg:grid-cols-[220px_1fr] h-screen relative">
+        <div className="grid lg:grid-cols-[220px_1fr] grid-cols-[1fr] h-screen relative">
           <Navbar openNavBar={openNavBar}  setNavbarOpen={setNavBarOpen}></Navbar>
           <div className="h-screen relative grid justify-start w-full grid-cols-1">
           <Header setMenuOpen={setNavBarOpen} openNavbar={openNavBar}></Header>
