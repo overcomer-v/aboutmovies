@@ -104,11 +104,11 @@ function Home() {
     <main className="flex flex-col w-full h-full bg">
   
         <div className="flex flex-col w-full pb-16 ">
-          <div className="flex my-4 gap-2 no-scrollbar overflow-x-auto mx-1">
+          {/* <div className="flex my-4 gap-2 no-scrollbar overflow-x-auto mx-1">
             {genrelist.map((genre) => (
               <GenreListCard key={genre.id} label={genre.name}></GenreListCard>
             ))}
-          </div>
+          </div> */}
 
           <div className="grid w-full grid-cols-1 mb-6">
             {popularMoviesList.slice(0, 1).map((popularMovies, index) => (

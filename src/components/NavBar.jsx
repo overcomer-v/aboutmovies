@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Navbar({ openNavBar, setNavbarOpen }) {
@@ -11,12 +11,30 @@ function Navbar({ openNavBar, setNavbarOpen }) {
     }
   });
 
+  const navRef = useRef();
+
   useEffect(() => {
     sessionStorage.setItem("option-key", pickedOptionsKey.toString());
   }, [pickedOptionsKey]);
 
+  useEffect(() => {
+    function handleOffsiteClick(e) {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setNavbarOpen(false);
+      }
+    }
+    setTimeout(() => {
+      document.addEventListener("click", handleOffsiteClick);
+    }, 100);
+
+    return () => {
+      document.removeEventListener("click", handleOffsiteClick);
+    };
+  }, [openNavBar]);
+
   return (
     <nav
+      ref={navRef}
       className={`bg-neutral-900  absolute lg:w-full ${
         openNavBar ? " left-[0]" : "-left-3/4"
       } h-full z-[1000] flex w-3/4 flex-col py-6 px-4 lg:sticky m-auto transition-all ease-in-out duration-500`}
