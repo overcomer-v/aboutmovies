@@ -11,6 +11,7 @@ import { AboutMovies } from "./pages/AboutMovies";
 import { AboutTvShows } from "./pages/AboutTvShows";
 import ResultsPage from "./pages/SearchResultsPage";
 import { AboutUs } from "./pages/AboutUs";
+import { GenreOpener } from "./pages/Genres";
 
 
 function App() {
@@ -31,6 +32,7 @@ const [openNavBar, setNavBarOpen] = useState(false);
               <Route path="/" element={<Home />}></Route>
               <Route path="/trendings" element={<Trending />}></Route>
               <Route path="/popular-page" element={<PopularPage></PopularPage>}> </Route>
+               <Route path="/genre-page/:genreId/:genre" element={<GenreOpener/>} ></Route>
               <Route path="/upcoming-page" element={<UpcomingPage/>} ></Route>
               <Route path="/topmovies-page" element={<TopMoviesPage/>} ></Route>
               <Route path="/movie-info" element={<AboutMovies/>}></Route>

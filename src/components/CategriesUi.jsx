@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { fetchMovieGenres } from "../hooks/movies";
+
 import { HorizontalCard } from "./Horizontal-Card";
 import { GenreListCard } from "./CategoriesCard";
 import { Spinner } from "./Spinner";
@@ -12,15 +11,7 @@ export function CategoriesUi({
   setListType,
   onItemsClick,
 }) {
-  const [genrelist, setGenreList] = useState([]);
-
-  useEffect(() => {
-    loadGenreList();
-  });
-
-  function loadGenreList() {
-    fetchMovieGenres().then((res) => setGenreList(res));
-  }
+ 
   return (
     <>
       {" "}
@@ -33,12 +24,8 @@ export function CategoriesUi({
           ) : (
             ""
           )}
-          <div className="flex my-4 gap-2 no-scrollbar overflow-x-auto mx-1">
-            {genrelist.map((genre) => (
-              <GenreListCard key={genre.id} label={genre.name}></GenreListCard>
-            ))}
-          </div>
-          <div className="grid md:grid-cols-2 gap-4 mx-1">
+         
+          <div className="grid md:grid-cols-2 gap-4 mx-1 mt-4">
             {" "}
             {itemsList.map((items, index) => (
               <HorizontalCard

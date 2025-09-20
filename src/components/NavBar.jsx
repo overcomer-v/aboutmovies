@@ -42,10 +42,10 @@ function Navbar({ openNavBar, setNavbarOpen }) {
       
       className={` absolute lg:w-full ${
         openNavBar ? " left-[0] right-0" : "-left-[100vw]"
-      } h-full z-[1000] flex w-full flex-col lg:fixed m-auto transition-all ease-in-out duration-1000`}
+      } h-full z-[1000] flex w-full flex-col lg:sticky m-auto transition-all ease-in-out duration-1000`}
     >
 
-      <div ref={navRef} className="w-3/4 bg-neutral-900 h-full py-6 px-4">
+      <div ref={navRef} className="w-3/4 md:w-full bg-neutral-900 h-full py-6 px-4">
 
       <div className="flex items-center justify-between mb-4">
         <div className="brand-name flex items-center gap-4">

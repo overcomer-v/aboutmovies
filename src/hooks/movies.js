@@ -143,6 +143,13 @@ export async function fetchMoviePictures(id) {
   return movieImages;
 }
 
+export async function fetchMoviesByGenres(genreId,pageNo=1) {
+  const url = `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&page=${pageNo}`;
+  const movies = await infoFetcher(url);
+  console.log(movies);
+  return movies.results;
+}
+
 export async function fetchSimilarMovies(genreId) {
   const url = `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`;
   const movies = await infoFetcher(url);

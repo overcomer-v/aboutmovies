@@ -135,6 +135,12 @@ export async function fetchTvPictures(id){
   return tvImages;
 }
 
+export async function fetchTvsByGenres(genreId,pageNo=1){
+  const url = `https://api.themoviedb.org/3/discover/tv?with_genres=${genreId}&page=${pageNo}`
+  const tvs = await infoFetcher(url);
+  return tvs.results;
+}
+
 export async function fetchSimilarTvs(genreId){
   const url = `https://api.themoviedb.org/3/discover/tv?with_genres=${genreId}&sort_by=popularity.desc`
   const tvs = await infoFetcher(url);

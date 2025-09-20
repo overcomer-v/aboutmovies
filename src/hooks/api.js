@@ -16,8 +16,7 @@ export async function infoFetcher(url="") {
     .then((res) => (result = res));
   } catch (error) {
     console.log(error);
-    return error;
-    
+    throw error
   }
     return result;
 }
