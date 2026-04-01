@@ -34,7 +34,7 @@ export function AboutMovies() {
         >
           <section
             id="p-info"
-            className="md:h-[600px] h-[250px]  w-full relative"
+            className="md:h-[600px] h-[250px] w-full relative"
           >
             <img
               className="w-full h-full object-cover "
@@ -48,7 +48,7 @@ export function AboutMovies() {
             <div className="h-full w-full gap-x-4 px-6  md:p-12 md:gap-x-12 items-center grid grid-cols-[40%_60%] md:grid-cols-[30%_70%] absolute top-0 bottom-0 bg-black bg-opacity-80">
               <div>
                 <img
-                  className="rounded-xl "
+                  className="rounded-xl md:h-[520px] h-[200px]"
                   src={`https://image.tmdb.org/t/p/w500/${movieInfo.poster_path}`}
                   alt=""
                 />
