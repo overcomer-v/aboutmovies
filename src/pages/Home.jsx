@@ -149,7 +149,7 @@ function Home() {
               {trendingMoviesList.slice(0, 10).map((movie) => (
                 <div
                   key={movie.id}
-                  className="flex-shrink-0 w-[72%] sm:w-[42%] md:w-[30%] lg:w-[23%]"
+                  className="flex-shrink-0 w-[70%] md:w-[30%] lg:w-[23%]"
                 >
                   <MediumCard
                     date={movie.release_date}

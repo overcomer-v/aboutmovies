@@ -4,7 +4,7 @@ export function MediumCard({ imgSrc, title, date, desc, ratings, onClick }) {
       onClick={onClick}
       className="
         group
-        w-2/3
+        w-full
         lg:w-full
         flex-shrink-0
         cursor-pointer
