@@ -30,7 +30,7 @@ function App() {
         />
 
         {/* Main Application */}
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden gap-2">
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden gap-2 px-2">
 
           {/* Header */}
           <Header
@@ -39,7 +39,7 @@ function App() {
           />
 
           {/* Page Content */}
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 lg:px-5">
+          <div className="min-h-0 flex-1 overflow-y-auto lg:px-5">
 
             <Routes>
               <Route

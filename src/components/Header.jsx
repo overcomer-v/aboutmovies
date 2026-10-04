@@ -91,7 +91,7 @@ function SmallScreenHeader({ openNavbar, setMenuOpen }) {
   return (
     <div className="w-full">
       {/* Top navigation */}
-      <div className="flex h-16 items-center justify-between px-4">
+      <div className="flex h-16 items-center justify-between">
         {/* Menu button */}
         <button
           type="button"
