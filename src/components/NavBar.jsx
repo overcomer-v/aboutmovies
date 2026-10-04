@@ -108,6 +108,7 @@ function Navbar({ openNavBar, setNavbarOpen }) {
           
           fixed inset-0 z-[999]
           bg-black/60 backdrop-blur-sm
+          
           transition-all duration-300
           lg:hidden
           ${
@@ -125,6 +126,7 @@ function Navbar({ openNavBar, setNavbarOpen }) {
           border-white/10
           fixed left-0 top-0 z-[1000]
           h-dvh
+          overflow-scroll
           w-[80%] max-w-[240px]
           lg:relative lg:z-auto
           lg:h-auto lg:w-full
@@ -172,7 +174,7 @@ function Navbar({ openNavBar, setNavbarOpen }) {
             </button>
 
             {/* Close button */}
-            <button
+            {/* <button
               type="button"
               onClick={() => setNavbarOpen(false)}
               aria-label="Close navigation"
@@ -187,7 +189,7 @@ function Navbar({ openNavBar, setNavbarOpen }) {
               "
             >
               <i className="fa fa-times" />
-            </button>
+            </button> */}
           </div>
 
           {/* Divider */}
