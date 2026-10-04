@@ -1,92 +1,152 @@
 import { useEffect, useState } from "react";
-import { HorizontalCard } from "../components/Horizontal-Card";
 import { fetchPopularMovies } from "../hooks/movies";
 import { CategoriesUi } from "../components/CategriesUi";
 import { fetchPopularTvs } from "../hooks/tvShows";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function PopularPage() {
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [popularMoviesList, setPopularMoviesList] = useState([]);
   const [popularTvsList, setPopularTvsList] = useState([]);
 
   const [tvPageNo, setTvPageNo] = useState(1);
   const [moviesPageNo, setMoviesPageNo] = useState(1);
-  const location = useLocation();
-  
+
   const [loading, setLoading] = useState(true);
+
   const [type, setType] = useState(() => {
     const queryParams = new URLSearchParams(location.search);
     const reqType = queryParams.get("type");
 
-    return reqType ? reqType : "Movies";
+    return reqType === "TvShows"
+      ? "TvShows"
+      : "Movies";
   });
+
+
+  /* =========================================================
+     LOAD MOVIES
+  ========================================================= */
 
   useEffect(() => {
     loadPopularMovies();
   }, [moviesPageNo]);
 
+
+  async function loadPopularMovies() {
+    try {
+      setLoading(true);
+
+      const res = await fetchPopularMovies(moviesPageNo);
+
+      setPopularMoviesList((current) => [
+        ...current,
+        ...(res || []),
+      ]);
+    } catch (error) {
+      console.error(
+        "Failed to load popular movies:",
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  /* =========================================================
+     LOAD TV SHOWS
+  ========================================================= */
+
   useEffect(() => {
     loadPopularTvs();
   }, [tvPageNo]);
 
-  function loadPopularTvs() {
-    setLoading(true);
 
-    fetchPopularTvs(tvPageNo).then((res) => {
-      setPopularTvsList((e) => [...e, ...res]);
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-    });
-  }
+  async function loadPopularTvs() {
+    try {
+      setLoading(true);
 
-  function morePage() {
-    type === "Movies"
-      ? setMoviesPageNo((e) => e + 1)
-      : setTvPageNo((e) => e + 1);
-  }
+      const res = await fetchPopularTvs(tvPageNo);
 
-  function loadPopularMovies() {
-    setLoading(true);
-
-    fetchPopularMovies(moviesPageNo).then((res) => {
-      setPopularMoviesList((e) => [...e, ...res]);
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-    });
-  }
-
-   function navigateToAbout({ e }) {
-
-    if (type === "Movies") {
-
-
-      const id = popularMoviesList[e].id;
-      console.log(id)
-      const genreId = popularMoviesList[e].genre_ids[0];
-      navigator(`/movie-info?movieid=${id}&genreid=${genreId}`);
-    } else if (type === "TvShows") {
-
-       const id = popularTvsList[e].id;
-      const genreId = popularTvsList[e].genre_ids[0];
-      navigator(`/tvshow-info?tvid=${id}&tv-genreid=${genreId}`);
+      setPopularTvsList((current) => [
+        ...current,
+        ...(res || []),
+      ]);
+    } catch (error) {
+      console.error(
+        "Failed to load popular TV shows:",
+        error
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
+
+  /* =========================================================
+     LOAD MORE
+  ========================================================= */
+
+  function morePage() {
+    if (type === "Movies") {
+      setMoviesPageNo((current) => current + 1);
+    } else {
+      setTvPageNo((current) => current + 1);
+    }
+  }
+
+
+  /* =========================================================
+     CARD CLICK
+  ========================================================= */
+
+  function navigateToAbout(item) {
+    if (!item) return;
+
+    if (type === "Movies") {
+      const id = item.id;
+      const genreId = item.genre_ids?.[0];
+
+      navigate(
+        `/movie-info?movieid=${id}&genreid=${genreId}`
+      );
+    }
+
+    if (type === "TvShows") {
+      const id = item.id;
+      const genreId = item.genre_ids?.[0];
+
+      navigate(
+        `/tvshow-info?tvid=${id}&tv-genreid=${genreId}`
+      );
+    }
+  }
+
+
+  /* =========================================================
+     CURRENT LIST
+  ========================================================= */
+
+  const currentList =
+    type === "Movies"
+      ? popularMoviesList
+      : popularTvsList;
+
+
   return (
     <CategoriesUi
-      itemsList={type === "Movies" ? popularMoviesList : popularTvsList}
+      itemsList={currentList}
       morePage={morePage}
       isloading={loading}
       listType={type}
       setListType={setType}
-      onItemsClick={(e)=>{
-        navigateToAbout({e:e})
+      onItemsClick={(item) => {
+        navigateToAbout(item);
       }}
-    ></CategoriesUi>
+    />
   );
 }
 

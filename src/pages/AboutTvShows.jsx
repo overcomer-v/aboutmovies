@@ -4,347 +4,992 @@ import { Subtitle } from "../components/Subtitle";
 import { useTvsInfo } from "../hooks/tvShows";
 import { MediumCard } from "../components/Medium-H-Card";
 import { Spinner } from "../components/Spinner";
+import { useEffect, useRef, useState } from "react";
 
 export function AboutTvShows() {
-  const navigateTo = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
+
   const queryParams = new URLSearchParams(location.search);
+
   const tvId = queryParams.get("tvid");
   const tvGenreId = queryParams.get("tv-genreid");
 
   const tvDetails = useTvsInfo(tvId, tvGenreId);
-  const backDropImages = tvDetails.backDropImages;
-  const posterImages = tvDetails.posterImages;
-  const tvTrailers = tvDetails.tvTrailers;
-  const tvInfo = tvDetails.tvInfo;
 
-  console.log(tvDetails.similarTvs);
+  const REVIEWS_STEP = 5;
+  const [visibleReviews, setVisibleReviews] = useState(REVIEWS_STEP);
+
+  // Reset the count when the user opens a different show
+  useEffect(() => {
+    setVisibleReviews(REVIEWS_STEP);
+  }, [tvId]);
+
+  const {
+    isLoading,
+    tvInfo = {},
+    genres = [],
+    genreNames = [],
+    casts = [],
+    reviews = [],
+    similarTvs = [],
+    posterImages = [],
+    backDropImages = [],
+    tvTrailers = [],
+  } = tvDetails;
+
+  const formatDate = (date) => {
+    if (!date) return "Unknown";
+
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const openTvShow = (show) => {
+    if (!show) return;
+
+    const id = show.id;
+    const genreId = show.genre_ids?.[0] || tvGenreId;
+
+    navigate(`/tvshow-info?tvid=${id}&tv-genreid=${genreId}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <Spinner className="text-6xl opacity-85" />
+      </div>
+    );
+  }
+
+  if (!tvInfo?.id) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
+        <div
+          className="
+          mb-5 flex h-20 w-20
+          items-center justify-center
+          rounded-full bg-white/[0.04]
+        "
+        >
+          <i className="fa fa-tv text-3xl text-white/20" />
+        </div>
+
+        <h1 className="text-2xl font-bold">TV show not found</h1>
+
+        <p className="mt-2 text-sm text-white/40">
+          We couldn't find information for this TV show.
+        </p>
+      </div>
+    );
+  }
+
+  const backdropUrl = tvInfo.backdrop_path
+    ? `https://image.tmdb.org/t/p/original/${tvInfo.backdrop_path}`
+    : "./images/black_horizontal_bg 2.jpg";
+
+  const posterUrl = tvInfo.poster_path
+    ? `https://image.tmdb.org/t/p/w500/${tvInfo.poster_path}`
+    : "./images/black_vertical_bg 2.jpg";
+
+  const trailer = tvTrailers[0];
 
   return (
-    <div className="pb-32">
-      {tvDetails.isLoading ? (
-       <Spinner className={"text-6xl opacity-85"}/>
-      ) : (
-        <div className="flex flex-col w-full h-fit">
-          <section
-            id="p-info"
-            className="lg:h-[600px] h-[250px]  w-full relative"
-          >
-            <img
-              className="w-full h-full object-cover "
-              src={`https://image.tmdb.org/t/p/w500/${
-                tvInfo.backdrop_path ? tvInfo.backdrop_path : ""
-              }`}
-              alt=""
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "./images/black_horizontal_bg 2.jpg";
-              }}
-            />{" "}
-            <div className="h-full w-full gap-x-4 px-6  md:p-12 md:gap-x-12 items-center grid grid-cols-[40%_60%] md:grid-cols-[30%_70%] absolute top-0 bottom-0 bg-black bg-opacity-80">
-              <div>
-                <img
-                  className="rounded-xl "
-                  src={`https://image.tmdb.org/t/p/w500/${
-                    tvInfo.poster_path ? tvInfo.poster_path : ""
-                  }`}
-                  alt=""
-                />
-              </div>
-              <div className="lg:p-12">
-                <div className="flex md:mb-4 items-center  h-8 text-center [&_p]:text-xs flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <i className="fa fa-star text-yellow-500"></i>
-                    <p className=" text-sm lg:text-base">
-                      {" "}
-                      {tvInfo.vote_average}
-                    </p>
-                  </div>
-                  <span className="mx-3 font-bold text-2xl  leading-none">
-                    ·
+    <main className="pb-24">
+      {/* =====================================================
+          HERO
+      ====================================================== */}
+      <section
+        className="
+        relative isolate
+        min-h-[620px]
+        overflow-hidden
+        rounded-b-3xl
+      "
+      >
+        {/* Backdrop */}
+        <img
+          src={backdropUrl}
+          alt=""
+          className="
+            absolute inset-0 -z-20
+            h-full w-full
+            object-cover object-center
+          "
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "./images/black_horizontal_bg 2.jpg";
+          }}
+        />
+
+        {/* Cinematic overlays */}
+        <div
+          className="
+          absolute inset-0 -z-10
+          bg-black/55
+        "
+        />
+
+        <div
+          className="
+          absolute inset-0 -z-10
+          bg-gradient-to-r
+          from-black
+          via-black/75
+          to-black/20
+        "
+        />
+
+        <div
+          className="
+          absolute inset-0 -z-10
+          bg-gradient-to-t
+          from-[#0a0a0a]
+          via-transparent
+          to-black/30
+        "
+        />
+
+        {/* Hero content */}
+        <div
+          className="
+          mx-auto flex min-h-[620px]
+          max-w-[1500px]
+          items-end gap-6
+          px-5 pb-8 pt-24
+          sm:px-8
+          md:items-center
+          md:gap-10
+          md:px-12
+          md:pb-12
+        "
+        >
+          {/* Poster */}
+          <div className="hidden flex-shrink-0 md:block">
+            <div
+              className="
+              group relative
+              overflow-hidden
+              rounded-2xl
+              shadow-2xl
+              shadow-black/60
+            "
+            >
+              <img
+                src={posterUrl}
+                alt={tvInfo.name}
+                className="
+                  h-[430px] w-[285px]
+                  object-cover
+                  transition-transform
+                  duration-500
+                  group-hover:scale-105
+                "
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "./images/black_vertical_bg 2.jpg";
+                }}
+              />
+
+              <div
+                className="
+                absolute inset-0
+                bg-gradient-to-t
+                from-black/50
+                to-transparent
+              "
+              />
+            </div>
+          </div>
+
+          {/* Information */}
+          <div className="max-w-3xl">
+            {/* Mobile poster */}
+            <div className="mb-5 md:hidden">
+              <img
+                src={posterUrl}
+                alt={tvInfo.name}
+                className="
+                  h-[250px] w-[170px]
+                  rounded-2xl
+                  object-cover
+                  shadow-2xl
+                  shadow-black/60
+                "
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "./images/black_vertical_bg 2.jpg";
+                }}
+              />
+            </div>
+
+            {/* Meta */}
+            <div
+              className="
+              mb-3 flex flex-wrap
+              items-center gap-2
+              text-xs text-white/60
+              sm:text-sm
+            "
+            >
+              <span
+                className="
+                flex items-center gap-1.5
+                font-semibold text-white
+              "
+              >
+                <i className="fa fa-star text-yellow-500" />
+                {Number(tvInfo.vote_average || 0).toFixed(1)}
+              </span>
+
+              <span className="text-white/20">•</span>
+
+              <span>{tvInfo.first_air_date?.slice(0, 4) || "Unknown"}</span>
+
+              {tvInfo.number_of_seasons && (
+                <>
+                  <span className="text-white/20">•</span>
+
+                  <span>
+                    {tvInfo.number_of_seasons}{" "}
+                    {tvInfo.number_of_seasons === 1 ? "Season" : "Seasons"}
                   </span>
-                  <p>{tvInfo.first_air_date}</p>
+                </>
+              )}
 
-                  <p className="hidden md:block">
-                    <span className="mx-3 font-bold text-2xl">·</span>2h50m
-                  </p>
-                </div>
-                <h1 className="text-2xl md:text-4xl font-bold md:mb-4 mb-1 tracking-widest">
-                  {" "}
-                  {tvInfo.name}
-                </h1>
-                <p className="text-sm hidden md:block">
-                  {/* Since the publication of the third edition of Engineering
-            Mathematics, considerable changes in the syllabus and options for
-            A-level qualifications in Mathematics have been introduced
-            nationally, as a result of which numbers of students with various
-            levels of mathematical background have been enrolling for
-            undergraduate courses in engineering and science. */}
-                  {tvInfo.overview}
-                </p>
+              {tvInfo.status && (
+                <>
+                  <span className="text-white/20">•</span>
 
-                <div className="md:flex gap-3 md:mt-4 flex-wrap hidden">
-                  {tvDetails.genres.slice(0, 5).map((genre, index) => (
-                    <GenreListCard
-                      key={index}
-                      label={genre.name}
-                    ></GenreListCard>
-                  ))}
-                </div>
-                {tvTrailers.length > 0 ? <a
-                  className="bg-default w-fit rounded-3xl px-6 py-2 md:mt-4 mt-8 flex items-center gap-2"
-                  href={`https://www.youtube.com/watch?v=${tvTrailers[0].key}`}
-                >
-                  <i className="fa fa-play"></i>
-                  <p className="text-sm lg:text-base">Trailer</p>
-                </a> : <></>}
-              </div>
-            </div>
-          </section>
-
-          <section className="md:hidden flex mt-4">
-            <div className="flex gap-3 md:mt-4 flex-wrap">
-              {tvDetails.genres.slice(0, 5).map((genre, index) => (
-                <GenreListCard key={index} label={genre.name}></GenreListCard>
-              ))}
-            </div>
-          </section>
-
-          <section className="flex-col md:hidden px-2">
-            <Subtitle label={"Overview"}></Subtitle>
-            <p className="text-sm ">{tvInfo.overview}</p>
-            <p className="opacity-60 mt-2 text-sm">Duration : 2h50m</p>
-          </section>
-
-          <section id="casts-sec" className="flex flex-col px-2 ">
-            <Subtitle label={"Casts"}></Subtitle>
-
-            <div className="flex gap-x-2 no-scrollbar overflow-x-auto ">
-              {tvDetails.casts.slice(0, 10).map((cast, index) => (
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`https://www.google.com/search?q=${cast.name}`}
-                  key={index}
-                  className="flex flex-col transition-transform duration-300 hover:scale-95 flex-shrink-0 w-[35%] md:w-[16%] h-fit p-4 bg-neutral-900 bg-opacity-50 rounded-xl items-center"
-                >
-                  <img
-                    className="mb-3 rounded-md"
-                    src={`https://image.tmdb.org/t/p/w500/${cast.profile_path}`}
-                    alt=""
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "./images/black_vertical_bg 2.jpg";
-                    }}
-                  />
-
-                  <h1 className="font-bold line-clamp-1">{cast.name}</h1>
-                  <p className="font-normal text-sm line-clamp-1">
-                    {" "}
-                    {cast.character}
-                  </p>
-                </a>
-              ))}
+                  <span>{tvInfo.status}</span>
+                </>
+              )}
             </div>
 
-            <div className="w-full flex justify-center mt-4">
-              <button className="bg-default text-sm lg:text-base w-fit rounded-3xl px-6 py-2  flex items-center gap-2 ">
-                Show All
-              </button>
-            </div>
-          </section>
+            {/* Title */}
+            <h1
+              className="
+              mb-3
+              font-nunito
+              text-3xl
+              font-extrabold
+              leading-tight
+              tracking-tight
+              sm:text-4xl
+              md:text-5xl
+              lg:text-6xl
+            "
+            >
+              {tvInfo.name}
+            </h1>
 
-          <section className="info-secn px-2">
-            <Subtitle label={"More Info"}></Subtitle>
-            <div className="grid md:grid-cols-3 grid-cols-1 gap-4 bg-[rgb(15,15,15)] p-6 rounded-lg ">
-              <InfoCard title={"Languages"} label={"English"}></InfoCard>
-              <InfoCard
-                title={"Release Date"}
-                label={tvInfo.first_air_date}
-              ></InfoCard>
-              <InfoCard
-                title={"Seasons"}
-                label={`${tvInfo.number_of_seasons} season(s)`}
-              ></InfoCard>
-              <InfoCard
-                title={"Episodes"}
-                label={`${tvInfo.number_of_episodes} Episode(s)`}
-              ></InfoCard>
-              <InfoCard title={"Status"} label={tvInfo.status}></InfoCard>
-              <InfoCard title={"Tag"} label={tvInfo.tagline}></InfoCard>
-              <InfoCard
-                title={"Ofiicial Sites"}
-                label={tvInfo.homepage}
-              ></InfoCard>
-              <InfoCard
-                title={"Tags"}
-                label={tvDetails.genreNames.join(" ,")}
-              ></InfoCard>
-              <InfoCard
-                title={"Last Air Date"}
-                label={tvInfo.last_air_date}
-              ></InfoCard>
-            </div>
-          </section>
+            {/* Tagline */}
+            {tvInfo.tagline && (
+              <p
+                className="
+                mb-4
+                text-sm italic
+                text-white/50
+                md:text-base
+              "
+              >
+                "{tvInfo.tagline}"
+              </p>
+            )}
 
-          <section className="flex flex-col px-2 ">
-            {!tvDetails.reviews.length > 0 ? (
-              <div></div>
-            ) : (
-              <div className="flex relative">
-                <section className="w-full">
-                  <Subtitle label={"Reviews"}></Subtitle>
-                  <div className="flex gap-x-2 overflow-x-auto no-scrollbar">
-                    {tvDetails.reviews.slice(0, 2).map((review) => (
-                      <ReviewCard
-                        username={review.author}
-                        date={review.created_at}
-                        content={review.content}
-                      ></ReviewCard>
-                    ))}
-                  </div>
-                </section>
-                {/* <div className="h-full w-64 bg-gradient-to-r from-transparent to-black absolute right-0"></div> */}
+            {/* Overview */}
+            <p
+              className="
+              hidden max-w-2xl
+              text-sm leading-7
+              text-white/65
+              md:block
+            "
+            >
+              {tvInfo.overview || "No overview available for this TV show."}
+            </p>
+
+            {/* Genres */}
+            {genres.length > 0 && (
+              <div
+                className="
+                mt-5 hidden
+                flex-wrap gap-2
+                md:flex
+              "
+              >
+                {genres.slice(0, 5).map((item) => (
+                  <GenreListCard key={item.id} label={item.name} />
+                ))}
               </div>
             )}
 
-            <section
-              id="pics-and-trailers"
-              className={`grid ${
-                tvTrailers.length === 0
-                  ? "md:grid-cols-1 "
-                  : "md:grid-cols-[68%_30%]"
-              } gap-6 px-2`}
-            >
-              <div id="pics-sec">
-                <Subtitle label={"Pictures"}></Subtitle>
-                <div className="flex flex-col gap-2 [&_img]:object-cover">
-                  {posterImages.length > 0 ? (
-                    <div className="flex gap-2">
-                      <img
-                        className="w-[28%]"
-                        src={`https://image.tmdb.org/t/p/w500/${posterImages[0].file_path}`}
-                        alt=""
-                      />
-                      <img
-                        className="w-[69%]"
-                        src={`https://image.tmdb.org/t/p/w500/${backDropImages[0].file_path}`}
-                        alt=""
-                      />
-                    </div>
-                  ) : (
-                    <></>
-                  )}
-                  {backDropImages.length > 1 ? (
-                    <div className="flex gap-2">
-                      <img
-                        className="w-[69%]"
-                        src={`https://image.tmdb.org/t/p/w500/${backDropImages[1].file_path}`}
-                        alt=""
-                      />
-                      <img
-                        className="w-[28%]"
-                        src={`https://image.tmdb.org/t/p/w500/${posterImages[1].file_path}`}
-                        alt=""
-                      />
-                    </div>
-                  ) : (
-                    <></>
-                  )}
-                </div>
-              </div>
-
-              {tvTrailers.length > 0 ? (
-                <div className="trailers-sec flex flex-col gap-4 [&img]:rounded-lg">
-                  <Subtitle label={"Trailers"}></Subtitle>
-
-                  <a
-                    className="relative"
-                    href={`https://www.youtube.com/watch?v=${tvTrailers[0].key}`}
-                  >
-                    <img
-                      className="border-neutral-300 border-2 rounded-3xl"
-                      src={`https://img.youtube.com/vi/${tvTrailers[0].key}/0.jpg`}
-                      alt=""
-                    />
-                    <i className="fab fa-youtube absolute top-[38%] left-[38%] color-default bg-white rounded-2xl text-[5rem]"></i>
-                  </a>
-
-                  {tvTrailers.length > 1 ? (
-                    <a
-                      className="relative"
-                      href={`https://www.youtube.com/watch?v=${tvTrailers[1].key}`}
-                    >
-                      <img
-                        className="border-neutral-300 border-2 rounded-3xl"
-                        src={`https://img.youtube.com/vi/${tvTrailers[1].key}/0.jpg`}
-                        alt=""
-                      />
-                      <i className="fab fa-youtube absolute top-[38%] left-[38%] color-default bg-white rounded-2xl text-[5rem]"></i>
-                    </a>
-                  ) : (
-                    <></>
-                  )}
-                </div>
-              ) : (
-                <></>
+            {/* Actions */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              {trailer && (
+                <a
+                  href={`https://www.youtube.com/watch?v=${trailer.key}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    flex items-center gap-2
+                    rounded-full
+                    bg-red-500
+                    px-6 py-3
+                    text-sm font-bold text-white
+                    shadow-lg
+                    shadow-red-500/20
+                    transition-all duration-200
+                    hover:bg-red-600
+                    hover:scale-[1.02]
+                    active:scale-95
+                  "
+                >
+                  <i className="fa fa-play text-xs" />
+                  Watch Trailer
+                </a>
               )}
-            </section>
-          </section>
 
-          <Subtitle label={"Similars"}></Subtitle>
-          <div className="flex gap-x-3 mb-8 no-scrollbar overflow-x-auto">
-            {tvDetails.similarTvs.slice(0, 15).map((similarMovie, index) => (
-              <MediumCard
-                key={index}
-                date={similarMovie.first_air_date}
-                imgSrc={`https://image.tmdb.org/t/p/w500/${similarMovie.backdrop_path}`}
-                title={similarMovie.name}
-                desc={similarMovie.overview}
-                ratings={similarMovie.vote_average}
-                onClick={function () {
-                  navigateTo(
-                    `/movie-info?movieid=${similarMovie.id}&genreid=${similarMovie.genre_ids[0]}`
-                  );
-
-                  window.location.reload();
-                }}
-              ></MediumCard>
-            ))}
+              {tvInfo.homepage && (
+                <a
+                  href={tvInfo.homepage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    flex items-center gap-2
+                    rounded-full
+                    border border-white/10
+                    bg-white/[0.06]
+                    px-6 py-3
+                    text-sm font-semibold
+                    text-white/80
+                    backdrop-blur-md
+                    transition-all duration-200
+                    hover:border-white/20
+                    hover:bg-white/10
+                    hover:text-white
+                  "
+                >
+                  <i className="fa fa-external-link text-xs" />
+                  Official Site
+                </a>
+              )}
+            </div>
           </div>
         </div>
+      </section>
+
+      {/* =====================================================
+          MOBILE GENRES + OVERVIEW
+      ====================================================== */}
+      <section className="px-3 md:hidden">
+        {genres.length > 0 && (
+          <div
+            className="
+            mt-5 flex gap-2
+            overflow-x-auto no-scrollbar
+          "
+          >
+            {genres.slice(0, 5).map((item) => (
+              <GenreListCard key={item.id} label={item.name} />
+            ))}
+          </div>
+        )}
+
+        <Subtitle label="Overview" />
+
+        <p
+          className="
+          text-sm leading-6
+          text-white/60
+        "
+        >
+          {tvInfo.overview || "No overview available."}
+        </p>
+      </section>
+
+      {/* =====================================================
+          CAST
+      ====================================================== */}
+      {casts.length > 0 && (
+        <section className="mt-8 px-3">
+          <Subtitle label="Cast" />
+
+          <div
+            className="
+            flex gap-3
+            overflow-x-auto no-scrollbar
+          "
+          >
+            {casts.slice(0, 12).map((cast) => {
+              const profile = cast.profile_path
+                ? `https://image.tmdb.org/t/p/w500/${cast.profile_path}`
+                : "./images/black_vertical_bg 2.jpg";
+
+              return (
+                <a
+                  key={cast.id || cast.name}
+                  href={`https://www.google.com/search?q=${encodeURIComponent(
+                    cast.name,
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    group
+                    flex w-[130px]
+                    flex-shrink-0
+                    flex-col
+                    overflow-hidden
+                    rounded-2xl
+                    border border-white/[0.05]
+                    bg-white/[0.03]
+                    p-2
+                    transition-all
+                    duration-300
+                    hover:-translate-y-1
+                    hover:border-red-500/20
+                    hover:bg-white/[0.05]
+                    sm:w-[145px]
+                    md:w-[150px]
+                  "
+                >
+                  <div
+                    className="
+                    aspect-[3/4]
+                    overflow-hidden
+                    rounded-xl
+                    bg-neutral-900
+                  "
+                  >
+                    <img
+                      src={profile}
+                      alt={cast.name}
+                      className="
+                        h-full w-full
+                        object-cover
+                        transition-transform
+                        duration-500
+                        group-hover:scale-105
+                      "
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          "./images/black_vertical_bg 2.jpg";
+                      }}
+                    />
+                  </div>
+
+                  <div className="px-1 pb-1 pt-3">
+                    <h3
+                      className="
+                      truncate text-sm
+                      font-bold
+                      group-hover:text-red-400
+                    "
+                    >
+                      {cast.name}
+                    </h3>
+
+                    <p
+                      className="
+                      mt-1 truncate
+                      text-xs text-white/40
+                    "
+                    >
+                      {cast.character || "Unknown role"}
+                    </p>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* =====================================================
+          SHOW INFORMATION
+      ====================================================== */}
+      <section className="mt-10 px-3">
+        <Subtitle label="Show Info" />
+
+        <div
+          className="
+          grid grid-cols-1
+          overflow-hidden
+          rounded-2xl
+          border border-white/[0.05]
+          bg-white/[0.025]
+          sm:grid-cols-2
+          lg:grid-cols-4
+        "
+        >
+          <InfoCard
+            title="First Air Date"
+            label={formatDate(tvInfo.first_air_date)}
+          />
+
+          <InfoCard
+            title="Last Air Date"
+            label={formatDate(tvInfo.last_air_date)}
+          />
+
+          <InfoCard
+            title="Seasons"
+            label={
+              tvInfo.number_of_seasons
+                ? `${tvInfo.number_of_seasons} ${
+                    tvInfo.number_of_seasons === 1 ? "Season" : "Seasons"
+                  }`
+                : "Unknown"
+            }
+          />
+
+          <InfoCard
+            title="Episodes"
+            label={
+              tvInfo.number_of_episodes
+                ? `${tvInfo.number_of_episodes} Episodes`
+                : "Unknown"
+            }
+          />
+
+          <InfoCard title="Status" label={tvInfo.status || "Unknown"} />
+
+          <InfoCard
+            title="Languages"
+            label={
+              tvInfo.spoken_languages?.length
+                ? tvInfo.spoken_languages
+                    .map((language) => language.english_name)
+                    .join(", ")
+                : "Unknown"
+            }
+          />
+
+          <InfoCard
+            title="Genres"
+            label={genreNames.length ? genreNames.join(", ") : "Unknown"}
+          />
+
+          <InfoCard
+            title="Networks"
+            label={
+              tvInfo.networks?.length
+                ? tvInfo.networks
+                    .slice(0, 2)
+                    .map((network) => network.name)
+                    .join(", ")
+                : "Unknown"
+            }
+          />
+
+          <InfoCard title="Type" label={tvInfo.type || "Unknown"} />
+
+          <InfoCard
+            title="Origin Country"
+            label={
+              tvInfo.origin_country?.length
+                ? tvInfo.origin_country.join(", ")
+                : "Unknown"
+            }
+          />
+
+          <InfoCard
+            title="Production"
+            label={
+              tvInfo.production_companies?.length
+                ? tvInfo.production_companies
+                    .slice(0, 2)
+                    .map((company) => company.name)
+                    .join(", ")
+                : "Unknown"
+            }
+          />
+
+          <InfoCard
+            title="Official Site"
+            label={tvInfo.homepage ? "Available" : "Not available"}
+            href={tvInfo.homepage}
+          />
+        </div>
+      </section>
+
+      {/* =====================================================
+          REVIEWS
+      ====================================================== */}
+      {/* =====================================================
+    REVIEWS
+====================================================== */}
+      {reviews.length > 0 && (
+        <section className="mt-10 px-3">
+          <Subtitle label="Reviews" />
+
+          <div className="columns-1 gap-4 lg:columns-2">
+            {" "}
+            {reviews.slice(0, visibleReviews).map((review) => (
+              <ReviewCard
+                key={review.id || review.author}
+                username={review.author}
+                date={review.created_at}
+                content={review.content}
+              />
+            ))}
+          </div>
+
+          {reviews.length > REVIEWS_STEP && (
+            <div className="mt-5 flex justify-center gap-3">
+              {visibleReviews > REVIEWS_STEP && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleReviews((prev) => {
+                      const shown = Math.min(prev, reviews.length);
+                      const previousBatch =
+                        Math.ceil(shown / REVIEWS_STEP) * REVIEWS_STEP -
+                        REVIEWS_STEP;
+                      return Math.max(REVIEWS_STEP, previousBatch);
+                    })
+                  }
+                  className="
+              flex items-center gap-2
+              rounded-full border border-white/10
+              px-6 py-2.5
+              text-sm font-semibold text-white/50
+              transition-all duration-200
+              hover:border-white/20
+              hover:text-white/80
+              active:scale-95
+            "
+                >
+                  Show less
+                  <i className="fa fa-chevron-up text-xs" />
+                </button>
+              )}
+
+              {visibleReviews < reviews.length && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleReviews((prev) => prev + REVIEWS_STEP)
+                  }
+                  className="
+              flex items-center gap-2
+              rounded-full border border-white/10
+              bg-white/[0.06] px-6 py-2.5
+              text-sm font-semibold text-white/80
+              transition-all duration-200
+              hover:border-white/20
+              hover:bg-white/10 hover:text-white
+              active:scale-95
+            "
+                >
+                  Show more (
+                  {Math.min(REVIEWS_STEP, reviews.length - visibleReviews)})
+                  <i className="fa fa-chevron-down text-xs" />
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* =====================================================
+          PICTURES + TRAILERS
+      ====================================================== */}
+      {(posterImages.length > 0 ||
+        backDropImages.length > 0 ||
+        tvTrailers.length > 0) && (
+        <section className="mt-10 px-3">
+          <div
+            className="
+            grid gap-8
+            lg:grid-cols-[1fr_360px]
+          "
+          >
+            {/* Pictures */}
+            {backDropImages.length > 0 && (
+              <div>
+                <Subtitle label="Pictures" />
+
+                <div
+                  className="
+                  grid grid-cols-2
+                  gap-2 sm:gap-3
+                "
+                >
+                  {backDropImages.slice(0, 4).map((image, index) => (
+                    <div
+                      key={image.file_path}
+                      className={`
+                          overflow-hidden
+                          rounded-xl
+                          ${
+                            index === 0
+                              ? "col-span-2 aspect-video"
+                              : "aspect-video"
+                          }
+                        `}
+                    >
+                      <img
+                        src={`https://image.tmdb.org/t/p/w780/${image.file_path}`}
+                        alt=""
+                        className="
+                            h-full w-full
+                            object-cover
+                            transition-transform
+                            duration-500
+                            hover:scale-105
+                          "
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Trailers */}
+            {tvTrailers.length > 0 && (
+              <div>
+                <Subtitle label="Trailers" />
+
+                <div
+                  className="
+                  flex flex-col gap-4
+                "
+                >
+                  {tvTrailers.slice(0, 2).map((trailerItem) => (
+                    <a
+                      key={trailerItem.key}
+                      href={`https://www.youtube.com/watch?v=${trailerItem.key}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="
+                          group relative
+                          overflow-hidden
+                          rounded-2xl
+                          border border-white/[0.06]
+                        "
+                    >
+                      <img
+                        src={`https://img.youtube.com/vi/${trailerItem.key}/hqdefault.jpg`}
+                        alt={trailerItem.name || "Trailer"}
+                        className="
+                            aspect-video
+                            h-full w-full
+                            object-cover
+                            transition-transform
+                            duration-500
+                            group-hover:scale-105
+                          "
+                      />
+
+                      <div
+                        className="
+                          absolute inset-0
+                          flex items-center
+                          justify-center
+                          bg-black/25
+                          transition-colors
+                          group-hover:bg-black/40
+                        "
+                      >
+                        <div
+                          className="
+                            flex h-14 w-14
+                            items-center justify-center
+                            rounded-full
+                            bg-red-500
+                            shadow-xl
+                            shadow-red-500/30
+                            transition-transform
+                            duration-300
+                            group-hover:scale-110
+                          "
+                        >
+                          <i className="fa fa-play text-white" />
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* =====================================================
+          SIMILAR TV SHOWS
+      ====================================================== */}
+      {similarTvs.length > 0 && (
+        <section className="mt-10">
+          <div className="px-3">
+            <Subtitle label="You Might Also Like" />
+          </div>
+
+          <div
+            className="
+            flex gap-4
+            overflow-x-auto
+            px-3 pb-4
+            no-scrollbar
+          "
+          >
+            {similarTvs.slice(0, 12).map((show) => (
+              <div
+                key={show.id}
+                className="
+                  w-[75%]
+                  flex-shrink-0
+                  sm:w-[45%]
+                  md:w-[32%]
+                  lg:w-[24%]
+                "
+              >
+                <MediumCard
+                  date={show.first_air_date}
+                  imgSrc={
+                    show.backdrop_path
+                      ? `https://image.tmdb.org/t/p/w780/${show.backdrop_path}`
+                      : "./images/black_horizontal_bg 2.jpg"
+                  }
+                  title={show.name}
+                  desc={show.overview}
+                  ratings={show.vote_average}
+                  onClick={() => openTvShow(show)}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}
+
+function InfoCard({ title, label, href }) {
+  return (
+    <div
+      className="
+      border-b border-white/[0.05]
+      p-5 sm:p-6
+    "
+    >
+      <h3
+        className="
+        mb-1 text-sm
+        font-semibold text-white/80
+      "
+      >
+        {title}
+      </h3>
+
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="
+            text-sm text-red-400
+            hover:text-red-300
+          "
+        >
+          {label}
+        </a>
+      ) : (
+        <p
+          className="
+          line-clamp-2
+          text-sm text-white/40
+        "
+        >
+          {label || "Not available"}
+        </p>
       )}
     </div>
   );
+}
 
-  function InfoCard({ title, label }) {
-    return (
-      <div className="flex flex-col gap-2 py-4 md:px-8 px-4 rounded-lg">
-        <h2 className="font-bold md:text-lg text-base">{title}</h2>
-        <span className="font-[300] text-sm opacity-70">{label}</span>
+function ReviewCard({ username, date, content }) {
+  const [open, setOpen] = useState(false);
+  const [canExpand, setCanExpand] = useState(false);
+  const textRef = useRef(null);
+
+  const formattedDate = date ? new Date(date).toLocaleDateString() : "";
+
+  // Only show the button if the text is actually being cut off
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el || open) return;
+    setCanExpand(el.scrollHeight > el.clientHeight + 1);
+  }, [content, open]);
+
+  return (
+   <article
+  className="
+    mb-4 w-full break-inside-avoid
+    rounded-2xl
+    border border-white/[0.05]
+    bg-white/[0.025]
+    p-5
+  "
+>
+      <div className="mb-4 flex items-center gap-3">
+        <div
+          className="
+            flex h-11 w-11
+            flex-shrink-0
+            items-center justify-center
+            rounded-full
+            bg-red-500/10
+          "
+        >
+          <i className="fa fa-user text-red-400" />
+        </div>
+
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-bold">
+            {username || "Anonymous"}
+          </h3>
+
+          <p className="text-xs text-white/30">{formattedDate}</p>
+        </div>
       </div>
-    );
-  }
 
-  function ReviewCard({ username, date, imgsrc, content }) {
-    return (
-      <div className="flex md:w-1/2 w-[80%] flex-shrink-0 flex-col gap-4 bg-[rgb(15,15,15)] p-6 rounded-lg">
-        <div className="flex gap-4 items-center">
-          <img
-            className="w-16 h-16 rounded-full"
-            src=".\images\desktop-wallpaper-spiderman-amoled-balck.jpg"
-            alt=""
+      <p
+        ref={textRef}
+        className={`
+          text-sm leading-6
+          text-white/55
+          whitespace-pre-line
+          ${open ? "" : "line-clamp-5"}
+        `}
+      >
+        {content || "No review content available."}
+      </p>
+
+      {(canExpand || open) && (
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="
+            mt-3 flex items-center gap-1.5
+            text-xs font-semibold
+            text-red-400 transition-colors
+            hover:text-red-300
+          "
+        >
+          {open ? "Show less" : "Show more"}
+          <i
+            className={`fa text-[10px] ${
+              open ? "fa-chevron-up" : "fa-chevron-down"
+            }`}
           />
-          <div className="flex flex-col">
-            <h1>{username}</h1>
-            <span className="opacity-60 font-[300] text-sm">{date}</span>
-          </div>
-        </div>
-        <div>
-          <span className="font-light text-sm line-clamp-5">{content}</span>
-          <span className="font-light text-sm underline">show more</span>
-        </div>
-      </div>
-    );
-  }
+        </button>
+      )}
+    </article>
+  );
 }

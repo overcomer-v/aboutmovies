@@ -1,52 +1,102 @@
-import { HashRouter, Route, Router, Routes } from "react-router-dom";
+import { useState } from "react";
+import { HashRouter, Route, Routes } from "react-router-dom";
+
 import Header from "./components/Header";
 import Navbar from "./components/NavBar";
+
 import Home from "./pages/Home";
 import Trending from "./pages/Trending";
 import PopularPage from "./pages/Popular";
 import UpcomingPage from "./pages/Upcoming";
 import TopMoviesPage from "./pages/TopMovies";
-import { useState } from "react";
+
 import { AboutMovies } from "./pages/AboutMovies";
 import { AboutTvShows } from "./pages/AboutTvShows";
 import ResultsPage from "./pages/SearchResultsPage";
 import { AboutUs } from "./pages/AboutUs";
 import { GenreOpener } from "./pages/Genres";
 
-
 function App() {
-
-const [openNavBar, setNavBarOpen] = useState(false);
+  const [openNavBar, setNavBarOpen] = useState(false);
 
   return (
-    <>
-      <HashRouter>
-        {" "}
-        <div className="grid lg:grid-cols-[220px_1fr] grid-cols-[1fr] h-screen relative">
-          <Navbar openNavBar={openNavBar}  setNavbarOpen={setNavBarOpen}></Navbar>
-          <div className="h-screen relative grid justify-start w-full grid-cols-1">
-          <Header setMenuOpen={setNavBarOpen} openNavbar={openNavBar}></Header>
+    <HashRouter>
+      <div className="flex h-dvh w-full overflow-hidden bg-neutral-950 text-white">
 
-             <div className="lg:ml-1 w-full lg:px-4 flex relative flex-col overflow-y-auto">
-            <Routes >
-              <Route path="/" element={<Home />}></Route>
-              <Route path="/trendings" element={<Trending />}></Route>
-              <Route path="/popular-page" element={<PopularPage></PopularPage>}> </Route>
-               <Route path="/genre-page/:genreId/:genre" element={<GenreOpener/>} ></Route>
-              <Route path="/upcoming-page" element={<UpcomingPage/>} ></Route>
-              <Route path="/topmovies-page" element={<TopMoviesPage/>} ></Route>
-              <Route path="/movie-info" element={<AboutMovies/>}></Route>
-              <Route path="/tvshow-info" element={<AboutTvShows/>}></Route>
-               <Route path="/result-page" element={<ResultsPage key={location.pathname + location.search}/>}></Route>
-               <Route path="/aboutus-page" element={ <AboutUs></AboutUs>}></Route>
+        {/* Sidebar / Mobile Drawer */}
+        <Navbar
+          openNavBar={openNavBar}
+          setNavbarOpen={setNavBarOpen}
+        />
+
+        {/* Main Application */}
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden gap-2">
+
+          {/* Header */}
+          <Header
+            setMenuOpen={setNavBarOpen}
+            openNavbar={openNavBar}
+          />
+
+          {/* Page Content */}
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 lg:px-5">
+
+            <Routes>
+              <Route
+                path="/"
+                element={<Home />}
+              />
+
+              <Route
+                path="/trendings"
+                element={<Trending />}
+              />
+
+              <Route
+                path="/popular-page"
+                element={<PopularPage />}
+              />
+
+              <Route
+                path="/genre-page/:genreId/:genre"
+                element={<GenreOpener />}
+              />
+
+              <Route
+                path="/upcoming-page"
+                element={<UpcomingPage />}
+              />
+
+              <Route
+                path="/topmovies-page"
+                element={<TopMoviesPage />}
+              />
+
+              <Route
+                path="/movie-info"
+                element={<AboutMovies />}
+              />
+
+              <Route
+                path="/tvshow-info"
+                element={<AboutTvShows />}
+              />
+
+              <Route
+                path="/result-page"
+                element={<ResultsPage />}
+              />
+
+              <Route
+                path="/aboutus-page"
+                element={<AboutUs />}
+              />
             </Routes>
+
           </div>
-          </div>
-         
-        </div>
-        <div>.</div>
-      </HashRouter>
-    </>
+        </main>
+      </div>
+    </HashRouter>
   );
 }
 

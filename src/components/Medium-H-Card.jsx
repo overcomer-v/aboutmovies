@@ -1,39 +1,181 @@
-import { Link } from "react-router-dom";
-
-export function MediumCard({ imgSrc, title, date, desc, ratings,onClick }) {
-    return (
-      <div className="lg:w-1/3 w-2/3 transition-transform duration-300 hover:scale-95 flex flex-col cursor-pointer justify-between flex-shrink-0 " onClick={onClick}>
+export function MediumCard({ imgSrc, title, date, desc, ratings, onClick }) {
+  return (
+    <article
+      onClick={onClick}
+      className="
+        group
+        w-2/3
+        lg:w-full
+        flex-shrink-0
+        cursor-pointer
+        overflow-hidden
+        transition-all
+        duration-300
+        hover:-translate-y-1
+      "
+    >
+      {/* Image */}
+      <div
+        className="
+          relative
+          w-full
+          aspect-video
+          overflow-hidden
+          rounded-2xl
+          bg-neutral-900
+          mb-4
+        "
+      >
         <img
-          className="w-full object-cover  rounded-2xl mb-3"
+          className="
+            absolute
+            inset-0
+            h-full
+            w-full
+            object-cover
+            transition-transform
+            duration-500
+            group-hover:scale-105
+          "
           src={imgSrc}
-          alt=""
+          alt={title}
+          loading="lazy"
         />
-        {/* <div className="bg-black w-full h-full absolute opacity-50"></div> */}
-        <div className=" flex flex-col lg:h-[230px] h-[160px]">
-          {" "}
-          <div className="flex justify-between mr-6 mb-1 mt-2 gap-4">
-            <h1 className="font-bold lg:text-xl mb-1 text-base font-nunito trunicate-oneline">
-              {title}
-            </h1>
-            <p className="opacity-50 text-sm lg:text-base">{date.slice(0, 4)}</p>
-          </div>
-          <div className="lg:truncate-multiline truncate-threeline w-[90%] mb-3 text-xs lg:text-base opacity-70">
-            {desc}{" "}
-          </div>
-          <div className="flex justify-between">
-            <button className="bg-default w-fit rounded-3xl px-6 py-2  flex items-center gap-2">
-              <i className="fa fa-angle-right"></i>
-              <p className="text-sm lg:text-base">More Info</p>
-            </button>
-  
-            <div className="flex items-center gap-2 mr-12">
-              <i className="fa fa-star text-yellow-500"></i>
-              <p className=" text-sm lg:text-base">
-                {ratings.toString().slice(0, 3)}
-              </p>
-            </div>
+
+        {/* Image gradient */}
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-t
+            from-black/70
+            via-transparent
+            to-transparent
+            opacity-70
+          "
+        />
+
+        {/* Rating badge */}
+        <div
+          className="
+            absolute
+            top-3
+            right-3
+            flex
+            items-center
+            gap-1.5
+            rounded-full
+            border
+            border-white/10
+            bg-black/70
+            px-2.5
+            py-1
+            text-xs
+            font-semibold
+            backdrop-blur-md
+          "
+        >
+          <i className="fa fa-star text-yellow-500" />
+
+          <span>{Number(ratings || 0).toFixed(1)}</span>
+        </div>
+        
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col">
+        {/* Title + year */}
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h2
+            className="
+              min-w-0
+              truncate
+              font-nunito
+              text-base
+              lg:text-xl
+              font-bold
+              leading-tight
+              transition-colors
+              duration-200
+              group-hover:text-red-400
+            "
+          >
+            {title}
+          </h2>
+
+          <span
+            className="
+              flex-shrink-0
+              text-xs
+              lg:text-sm
+              text-white/40
+            "
+          >
+            {date?.slice(0, 4)}
+          </span>
+        </div>
+
+        {/* Description */}
+        <p
+          className="
+            mb-4
+            w-[95%]
+            text-xs
+            lg:text-sm
+            leading-relaxed
+            text-white/55
+            line-clamp-3
+          "
+        >
+          {desc || "No description available."}
+        </p>
+
+        {/* Bottom row */}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick?.();
+            }}
+            className="
+              flex
+              items-center
+              gap-2
+              rounded-full
+              border
+              border-white/10
+              bg-white/[0.04]
+              px-4
+              py-2
+              text-xs
+              lg:text-sm
+              font-semibold
+              text-white/80
+              transition-all
+              duration-200
+              hover:border-red-500/40
+              hover:bg-red-500
+              hover:text-white
+            "
+          >
+            More Info
+            <i
+              className="
+                fa fa-angle-right
+                text-xs
+                transition-transform
+                duration-200
+                group-hover:translate-x-0.5
+              "
+            />
+          </button>
+
+          <div className="flex items-center gap-1.5 text-xs text-white/50">
+            <i className="fa fa-star text-yellow-500" />
+            <span>{Number(ratings || 0).toFixed(1)}</span>
           </div>
         </div>
       </div>
-    );
-  }
+    </article>
+  );
+}

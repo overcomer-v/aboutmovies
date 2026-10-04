@@ -1,83 +1,166 @@
-
 import { HorizontalCard } from "./Horizontal-Card";
-import { GenreListCard } from "./CategoriesCard";
 import { Spinner } from "./Spinner";
 
 export function CategoriesUi({
-  itemsList,
+  itemsList = [],
   isloading,
   morePage,
   listType,
   setListType,
   onItemsClick,
 }) {
- 
+  if (isloading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <Spinner className="text-5xl opacity-80" />
+      </div>
+    );
+  }
+
+  console.log("TYPE:", listType);
+  console.log("FIRST ITEM:", itemsList[0]);
   return (
-    <>
-      {" "}
-      {isloading ? (
-        <Spinner className={"text-5xl opacity-80"}/>
-      ) : (
-        <main className="flex flex-col">
-          {setListType ? (
-            <TypeTab type={listType} setType={setListType}></TypeTab>
-          ) : (
-            ""
-          )}
-         
-          <div className="grid md:grid-cols-2 gap-4 mx-1 mt-4">
-            {" "}
-            {itemsList.map((items, index) => (
+    <main className="flex flex-col w-full">
+      {/* Movie / TV switcher */}
+      {setListType && <TypeTab type={listType} setType={setListType} />}
+
+      {/* Results */}
+      <div
+        className="
+          grid
+          grid-cols-1
+          lg:grid-cols-2
+          gap-4
+          lg:gap-5
+          mt-5
+          px-1
+        "
+      >
+        {itemsList.length > 0 ? (
+          itemsList.map((item, index) => {
+            const isMovie = listType === "Movies";
+
+            return (
               <HorizontalCard
-                key={index}
-                date={
-                  listType === "Movies"
-                    ? items.release_date
-                    : items.first_air_date
+                key={item.id + index}
+                date={isMovie ? item.release_date : item.first_air_date}
+                imgSrc={
+                  item.poster_path
+                    ? `https://image.tmdb.org/t/p/w500/${item.poster_path}`
+                    : undefined
                 }
-                imgSrc={`https://image.tmdb.org/t/p/w500/${items.poster_path}`}
-                title={listType === "Movies" ? items.title : items.name}
-                desc={items.overview}
-                ratings={items.vote_average}
-                onClick={() => {
-                  onItemsClick ? onItemsClick(index) : {};
-                }}
-              ></HorizontalCard>
-            ))}
+                title={isMovie ? item.title : item.name}
+                desc={item.overview}
+                ratings={item.vote_average}
+                onClick={() => onItemsClick?.(item)}
+              />
+            );
+          })
+        ) : (
+          <div className="col-span-full py-16 text-center">
+            <p className="text-white/40">No results found.</p>
           </div>
-          <button
-            className="px-8 py-4 bg-default mx-auto my-6 rounded-lg font-bold"
-            onClick={morePage}
-          >
-            Load More
-          </button>
-        </main>
+        )}
+      </div>
+
+      {/* Load more */}
+      {itemsList.length > 0 && morePage && (
+        <button
+          onClick={morePage}
+          className="
+            group
+            mx-auto
+            mt-8
+            flex
+            items-center
+            gap-2
+            rounded-full
+            border
+            border-white/10
+            bg-white/[0.04]
+            px-7
+            py-3
+            text-sm
+            font-semibold
+            text-white/70
+            transition-all
+            duration-200
+            hover:border-red-500/40
+            hover:bg-red-500
+            hover:text-white
+            active:scale-95
+          "
+        >
+          Load More
+          <i
+            className="
+              fa fa-angle-down
+              text-xs
+              transition-transform
+              duration-200
+              group-hover:translate-y-0.5
+            "
+          />
+        </button>
       )}
-    </>
+    </main>
   );
 }
+
+/* =========================================================
+   MOVIE / TV TOGGLE
+========================================================= */
 
 function TypeTab({ type, setType }) {
   return (
     <div
-      className={`flex gap-x-4 mt-4 px-2 [&_h4]:px-4 [&_h4]:py-2 [&_h4]:md:px-6 [&_h4]:md:py-3 [&_h4]:rounded-lg [&_h4]:cursor-pointer `}
+      className="
+      inline-flex
+      w-fit
+      items-center
+      gap-1
+      rounded-full
+      border
+      border-white/10
+      bg-neutral-900/80
+      p-1
+    "
     >
-      <h4
-        className={`${type === "Movies" ? "bg-default" : "bg-neutral-900"}`}
-        onClick={() => {
-          setType("Movies");
-        }}
+      <button
+        type="button"
+        onClick={() => setType("Movies")}
+        className={`
+          rounded-full
+          px-5 py-2
+          text-sm font-semibold
+          transition-all duration-200
+          ${
+            type === "Movies"
+              ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
+              : "text-white/50 hover:text-white"
+          }
+        `}
       >
-        Movie
-      </h4>
-      <h4
-        className={`${type === "TvShows" ? "bg-default" : "bg-neutral-900"}`}
-        onClick={() => {
-          setType("TvShows");
-        }}
+        Movies
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setType("TvShows")}
+        className={`
+          rounded-full
+          px-5 py-2
+          text-sm font-semibold
+          transition-all duration-200
+          ${
+            type === "TvShows"
+              ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
+              : "text-white/50 hover:text-white"
+          }
+        `}
       >
-        TvShows
-      </h4>
+        TV Shows
+      </button>
     </div>
   );
 }

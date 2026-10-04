@@ -3,357 +3,831 @@ import { GenreListCard } from "../components/CategoriesCard";
 import { Subtitle } from "../components/Subtitle";
 import { MediumCard } from "../components/Medium-H-Card";
 import { useMoviesInfo } from "../hooks/movies";
-import { useEffect } from "react";
 import { Spinner } from "../components/Spinner";
+import { useEffect, useState } from "react";
 
 export function AboutMovies() {
-  const navigateTo = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
+
   const queryParams = new URLSearchParams(location.search);
+
   const movieId = queryParams.get("movieid");
   const movieGenreId = queryParams.get("genreid");
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const REVIEWS_STEP = 5;
+  const [visibleReviews, setVisibleReviews] = useState(REVIEWS_STEP);
 
   const movieDetails = useMoviesInfo(movieId, movieGenreId);
-  const backDropImages = movieDetails.backDropImages;
-  const posterImages = movieDetails.posterImages;
-  const movieTrailers = movieDetails.movieTrailers;
-  const movieInfo = movieDetails.movieInfo;
 
   useEffect(() => {
-    console.log(movieDetails.similarMovies);
-  }, [movieDetails]);
+    setVisibleReviews(REVIEWS_STEP);
+  }, [movieId]);
+
+  const {
+    isLoading,
+    movieInfo = {},
+    genres = [],
+    genreNames = [],
+    casts = [],
+    reviews = [],
+    similarMovies = [],
+    posterImages = [],
+    backDropImages = [],
+    movieTrailers = [],
+  } = movieDetails;
+
+  const formatMoney = (value) => {
+    if (!value) return "Not available";
+
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const formatRuntime = (minutes) => {
+    if (!minutes) return "Not available";
+
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    if (hours === 0) return `${mins}m`;
+
+    return `${hours}h ${mins}m`;
+  };
+
+  const openMovie = (movie) => {
+    if (!movie) return;
+
+    const id = movie.id;
+    const genreId = movie.genre_ids?.[0] || movieGenreId;
+
+    navigate(`/movie-info?movieid=${id}&genreid=${genreId}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <Spinner className="text-6xl opacity-85" />
+      </div>
+    );
+  }
+
+  if (!movieInfo?.id) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
+        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.04]">
+          <i className="fa fa-film text-3xl text-white/20" />
+        </div>
+
+        <h1 className="text-2xl font-bold">Movie not found</h1>
+
+        <p className="mt-2 text-sm text-white/40">
+          We couldn't find information for this movie.
+        </p>
+      </div>
+    );
+  }
+
+  const backdropUrl = movieInfo.backdrop_path
+    ? `https://image.tmdb.org/t/p/original/${movieInfo.backdrop_path}`
+    : "./images/black_horizontal_bg 2.jpg";
+
+  const posterUrl = movieInfo.poster_path
+    ? `https://image.tmdb.org/t/p/w500/${movieInfo.poster_path}`
+    : "./images/black_vertical_bg 2.jpg";
+
+  const trailer = movieTrailers[0];
 
   return (
-    <div className="pb-32">
-      {movieDetails.isLoading ? (
-       <Spinner className={"text-6xl opacity-85"}/>
-      ) : (
+    <main className="pb-24">
+      {/* =====================================================
+          HERO
+      ====================================================== */}
+      <section className="relative isolate min-h-[620px] overflow-hidden rounded-b-3xl">
+        {/* Backdrop */}
+        <img
+          src={backdropUrl}
+          alt=""
+          className="
+            absolute inset-0 -z-20
+            h-full w-full object-cover
+            object-center
+          "
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "./images/black_horizontal_bg 2.jpg";
+          }}
+        />
+
+        {/* Cinematic overlays */}
+        <div className="absolute inset-0 -z-10 bg-black/55" />
+
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black via-black/75 to-black/20" />
+
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0a0a0a] via-transparent to-black/30" />
+
+        {/* Hero content */}
         <div
-          className="flex flex-col w-f
-        ull h-fit"
+          className="
+          mx-auto flex min-h-[620px] max-w-[1500px]
+          items-end gap-6 px-5 pb-8 pt-24
+          sm:px-8 md:items-center md:gap-10
+          md:px-12 md:pb-12
+        "
         >
-          <section
-            id="p-info"
-            className="md:h-[600px] h-[250px] w-full relative"
+          {/* Poster */}
+          <div
+            className="
+            hidden flex-shrink-0
+            md:block
+          "
           >
-            <img
-              className="w-full h-full object-cover "
-              src={`https://image.tmdb.org/t/p/w500/${movieInfo.backdrop_path}`}
-              alt=""
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "./images/black_horizontal_bg 2.jpg";
-              }}
-            />{" "}
-            <div className="h-full w-full gap-x-4 px-6  md:p-12 md:gap-x-12 items-center grid grid-cols-[40%_60%] md:grid-cols-[30%_70%] absolute top-0 bottom-0 bg-black bg-opacity-80">
-              <div>
-                <img
-                  className="rounded-xl md:h-[520px] h-[200px]"
-                  src={`https://image.tmdb.org/t/p/w500/${movieInfo.poster_path}`}
-                  alt=""
-                />
-              </div>
-              <div className="lg:p-12">
-                <div className="flex md:mb-4 items-center  h-8 text-center [&_p]:text-xs flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <i className="fa fa-star text-yellow-500"></i>
-                    <p className=" text-sm lg:text-base">
-                      {" "}
-                      {movieInfo.vote_average}
-                    </p>
-                  </div>
-                  <span className="mx-3 font-bold text-2xl  leading-none">
-                    ·
-                  </span>
-                  <p>{movieInfo.release_date}</p>
+            <div
+              className="
+              group relative overflow-hidden
+              rounded-2xl shadow-2xl
+              shadow-black/60
+            "
+            >
+              <img
+                src={posterUrl}
+                alt={movieInfo.title}
+                className="
+                  h-[430px] w-[285px]
+                  object-cover
+                  transition-transform duration-500
+                  group-hover:scale-105
+                "
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "./images/black_vertical_bg 2.jpg";
+                }}
+              />
 
-                  <p className="hidden md:block">
-                    <span className="mx-3 font-bold text-2xl">·</span>2h50m
-                  </p>
-                </div>
-                <h1 className="text-2xl md:text-4xl font-bold md:mb-4 mb-1 tracking-widest">
-                  {" "}
-                  {movieInfo.title}
-                </h1>
-                <p className="text-sm hidden md:block">
-                  {/* Since the publication of the third edition of Engineering
-            Mathematics, considerable changes in the syllabus and options for
-            A-level qualifications in Mathematics have been introduced
-            nationally, as a result of which numbers of students with various
-            levels of mathematical background have been enrolling for
-            undergraduate courses in engineering and science. */}
-                  {movieInfo.overview}
-                </p>
-
-                <div className="md:flex gap-3 md:mt-4 flex-wrap hidden">
-                  {movieDetails.genres.slice(0, 5).map((genre, index) => (
-                    <GenreListCard
-                      key={index}
-                      label={genre.name}
-                    ></GenreListCard>
-                  ))}
-                </div>
-               {movieTrailers.length > 0 ? <a
-                  className="bg-default w-fit rounded-3xl px-6 py-2 md:mt-4 mt-8 flex items-center gap-2"
-                  href={`https://www.youtube.com/watch?v=${movieTrailers[0].key}`}
-                >
-                  <i className="fa fa-play"></i>
-                  <p className="text-sm lg:text-base">Trailer</p>
-                </a>: <></>}
-              </div>
+              <div
+                className="
+                absolute inset-0
+                bg-gradient-to-t
+                from-black/50 to-transparent
+              "
+              />
             </div>
-          </section>
+          </div>
 
-          <section>
-            <div className="flex gap-3 mt-4 flex-wrap md:hidden">
-              {movieDetails.genres.slice(0, 5).map((genre, index) => (
-                <GenreListCard key={index} label={genre.name}></GenreListCard>
-              ))}
-            </div>
-          </section>
-
-          <section className="flex-col md:hidden px-2">
-            <Subtitle label={"Overview"}></Subtitle>
-            <p className="text-sm ">{movieInfo.overview}</p>
-            <p className="opacity-60 mt-2 text-sm">Duration : 2h50m</p>
-          </section>
-
-          <section id="casts-sec" className="flex flex-col px-2">
-            <Subtitle label={"Casts"}></Subtitle>
-
-            <div className="flex gap-x-2 no-scrollbar overflow-x-auto ">
-              {movieDetails.casts.slice(0, 10).map((cast, index) => (
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`https://www.google.com/search?q=${cast.name}`}
-                  key={index}
-                  className="flex flex-col flex-shrink-0 transition-transform duration-300 hover:scale-95 w-[35%] md:w-[16%] h-fit p-4 bg-neutral-900 bg-opacity-50 rounded-xl items-center"
-                >
-                  <img
-                    className="mb-3 rounded-md"
-                    src={`https://image.tmdb.org/t/p/w500/${cast.profile_path}`}
-                    alt=""
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "./images/black_vertical_bg 2.jpg";
-                    }}
-                  />
-
-                  <h1 className="font-bold line-clamp-1">{cast.name}</h1>
-                  <p className="font-normal text-sm line-clamp-1">
-                    {" "}
-                    {cast.character}
-                  </p>
-                </a>
-              ))}
+          {/* Information */}
+          <div className="max-w-3xl">
+            {/* Mobile poster */}
+            <div className="mb-5 md:hidden">
+              <img
+                src={posterUrl}
+                alt={movieInfo.title}
+                className="
+                  h-[250px] w-[170px]
+                  rounded-2xl object-cover
+                  shadow-2xl shadow-black/60
+                "
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "./images/black_vertical_bg 2.jpg";
+                }}
+              />
             </div>
 
-            <div className="w-full flex justify-center mt-4">
-              <button className="bg-default text-sm lg:text-base w-fit rounded-3xl px-6 py-2  flex items-center gap-2 ">
-                Show All
-              </button>
-            </div>
-          </section>
+            {/* Meta */}
+            <div
+              className="
+              mb-3 flex flex-wrap
+              items-center gap-2 text-xs
+              text-white/60 sm:text-sm
+            "
+            >
+              <span
+                className="
+                flex items-center gap-1.5
+                font-semibold text-white
+              "
+              >
+                <i className="fa fa-star text-yellow-500" />
+                {Number(movieInfo.vote_average || 0).toFixed(1)}
+              </span>
 
-          <section className="info-secn px-2">
-            <Subtitle label={"More Info"}></Subtitle>
-            <div className="grid md:grid-cols-3 grid-cols-1 gap-4 bg-[rgb(15,15,15)] p-6 rounded-lg ">
-              <InfoCard title={"Languages"} label={"English"}></InfoCard>
-              <InfoCard
-                title={"Release Date"}
-                label={movieInfo.release_date}
-              ></InfoCard>
-              <InfoCard title={"Revenue"} label={movieInfo.revenue}></InfoCard>
-              <InfoCard title={"Budget"} label={movieInfo.budget}></InfoCard>
-              <InfoCard title={"Status"} label={movieInfo.status}></InfoCard>
-              <InfoCard title={"Tag"} label={movieInfo.tagline}></InfoCard>
-              <InfoCard
-                title={"Ofiicial Sites"}
-                label={movieInfo.homepage}
-              ></InfoCard>
-              <InfoCard
-                title={"Tags"}
-                label={movieDetails.genreNames.join(" ,")}
-              ></InfoCard>
-            </div>
-          </section>
+              <span className="text-white/20">•</span>
 
-          <section className="flex flex-col px-2 ">
-            {!movieDetails.reviews.length > 0 ? (
-              <div></div>
-            ) : (
-              <div className="flex relative">
-                <section className="w-full">
-                  <Subtitle label={"Reviews"}></Subtitle>
-                  <div className="flex gap-x-2 overflow-x-auto no-scrollbar">
-                    {movieDetails.reviews.slice(0, 2).map((review) => (
-                      <ReviewCard
-                        modify={
-                          movieDetails.reviews.length > 1
-                            ? "md:w-1/2"
-                            : "md:w-full"
-                        }
-                        username={review.author}
-                        date={review.created_at}
-                        content={review.content}
-                      ></ReviewCard>
-                    ))}
-                  </div>
-                </section>
-                {/* <div className="h-full w-64 bg-gradient-to-r from-transparent to-black absolute right-0"></div> */}
+              <span>{movieInfo.release_date?.slice(0, 4) || "Unknown"}</span>
+
+              {movieInfo.runtime && (
+                <>
+                  <span className="text-white/20">•</span>
+
+                  <span>{formatRuntime(movieInfo.runtime)}</span>
+                </>
+              )}
+
+              {movieInfo.status && (
+                <>
+                  <span className="text-white/20">•</span>
+
+                  <span>{movieInfo.status}</span>
+                </>
+              )}
+            </div>
+
+            {/* Title */}
+            <h1
+              className="
+              mb-3 font-nunito
+              text-3xl font-extrabold
+              leading-tight tracking-tight
+              sm:text-4xl md:text-5xl lg:text-6xl
+            "
+            >
+              {movieInfo.title}
+            </h1>
+
+            {/* Tagline */}
+            {movieInfo.tagline && (
+              <p
+                className="
+                mb-4 text-sm italic
+                text-white/50 md:text-base
+              "
+              >
+                "{movieInfo.tagline}"
+              </p>
+            )}
+
+            {/* Overview */}
+            <p
+              className="
+              hidden max-w-2xl
+              text-sm leading-7
+              text-white/65 md:block
+            "
+            >
+              {movieInfo.overview || "No overview available for this movie."}
+            </p>
+
+            {/* Genres */}
+            {genres.length > 0 && (
+              <div
+                className="
+                mt-5 hidden
+                flex-wrap gap-2 md:flex
+              "
+              >
+                {genres.slice(0, 5).map((item) => (
+                  <GenreListCard key={item.id} label={item.name} />
+                ))}
               </div>
             )}
 
-            <section
-              id="pics-and-trailers"
-              className={`grid ${
-                movieTrailers.length === 0
-                  ? "md:grid-cols-1 "
-                  : "md:grid-cols-[68%_30%]"
-              } gap-6 px-2`}
-            >
-              <div id="pics-sec" className="w-full">
-                <Subtitle label={"Pictures"}></Subtitle>
-                <div className="flex flex-col gap-2 [&_img]:object-cover w-full">
-                  {posterImages.length > 0 ? (
-                    <div className="flex gap-2">
-                      <img
-                        className="w-[28%]"
-                        src={`https://image.tmdb.org/t/p/w500/${posterImages[0].file_path}`}
-                        alt=""
-                      />
-                      <img
-                        className="w-[69%]"
-                        src={`https://image.tmdb.org/t/p/w500/${backDropImages[0].file_path}`}
-                        alt=""
-                      />
-                    </div>
-                  ) : (
-                    <></>
-                  )}
+            {/* Actions */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              {trailer && (
+                <a
+                  href={`https://www.youtube.com/watch?v=${trailer.key}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    flex items-center gap-2
+                    rounded-full bg-red-500
+                    px-6 py-3
+                    text-sm font-bold text-white
+                    shadow-lg shadow-red-500/20
+                    transition-all duration-200
+                    hover:bg-red-600
+                    hover:scale-[1.02]
+                    active:scale-95
+                  "
+                >
+                  <i className="fa fa-play text-xs" />
+                  Watch Trailer
+                </a>
+              )}
 
-                  {backDropImages.length > 1 ? (
-                    <div className="flex gap-2">
-                      <img
-                        className="w-[69%]"
-                        src={`https://image.tmdb.org/t/p/w500/${backDropImages[1].file_path}`}
-                        alt=""
-                      />
-                      <img
-                        className="w-[28%]"
-                        src={`https://image.tmdb.org/t/p/w500/${posterImages[1].file_path}`}
-                        alt=""
-                      />
-                    </div>
-                  ) : (
-                    <></>
-                  )}
-                </div>
-              </div>
+              {movieInfo.homepage && (
+                <a
+                  href={movieInfo.homepage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    flex items-center gap-2
+                    rounded-full border
+                    border-white/10
+                    bg-white/[0.06]
+                    px-6 py-3
+                    text-sm font-semibold
+                    text-white/80
+                    backdrop-blur-md
+                    transition-all duration-200
+                    hover:border-white/20
+                    hover:bg-white/10
+                    hover:text-white
+                  "
+                >
+                  <i className="fa fa-external-link text-xs" />
+                  Official Site
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
-              {movieTrailers.length > 0 ? (
-                <div className="trailers-sec flex flex-col gap-4 [&img]:rounded-lg">
-                  <Subtitle label={"Trailers"}></Subtitle>
-                  <a
-                    className="relative"
-                    href={`https://www.youtube.com/watch?v=${movieTrailers[0].key}`}
+      {/* =====================================================
+          MOBILE OVERVIEW + GENRES
+      ====================================================== */}
+      <section className="px-3 md:hidden">
+        {genres.length > 0 && (
+          <div
+            className="
+            mt-5 flex gap-2
+            overflow-x-auto no-scrollbar
+          "
+          >
+            {genres.slice(0, 5).map((item) => (
+              <GenreListCard key={item.id} label={item.name} />
+            ))}
+          </div>
+        )}
+
+        <Subtitle label="Overview" />
+
+        <p
+          className="
+          text-sm leading-6
+          text-white/60
+        "
+        >
+          {movieInfo.overview || "No overview available."}
+        </p>
+      </section>
+
+      {/* =====================================================
+          CAST
+      ====================================================== */}
+      {casts.length > 0 && (
+        <section className="mt-8 px-3">
+          <Subtitle label="Cast" />
+
+          <div
+            className="
+            flex gap-3
+            overflow-x-auto no-scrollbar
+          "
+          >
+            {casts.slice(0, 12).map((cast) => {
+              const profile = cast.profile_path
+                ? `https://image.tmdb.org/t/p/w500/${cast.profile_path}`
+                : "./images/black_vertical_bg 2.jpg";
+
+              return (
+                <a
+                  key={cast.id || cast.name}
+                  href={`https://www.google.com/search?q=${encodeURIComponent(
+                    cast.name,
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    group flex w-[130px]
+                    flex-shrink-0 flex-col
+                    overflow-hidden rounded-2xl
+                    border border-white/[0.05]
+                    bg-white/[0.03]
+                    p-2
+                    transition-all duration-300
+                    hover:-translate-y-1
+                    hover:border-red-500/20
+                    hover:bg-white/[0.05]
+                    sm:w-[145px]
+                    md:w-[150px]
+                  "
+                >
+                  <div
+                    className="
+                    aspect-[3/4]
+                    overflow-hidden rounded-xl
+                    bg-neutral-900
+                  "
                   >
                     <img
-                      className="border-neutral-300 border-2 rounded-3xl"
-                      src={`https://img.youtube.com/vi/${movieTrailers[0].key}/0.jpg`}
-                      alt=""
+                      src={profile}
+                      alt={cast.name}
+                      className="
+                        h-full w-full
+                        object-cover
+                        transition-transform
+                        duration-500
+                        group-hover:scale-105
+                      "
                       onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "./images/black_vertical_bg 2.jpg";
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          "./images/black_vertical_bg 2.jpg";
                       }}
                     />
-                    <i className="fab fa-youtube absolute top-[38%] left-[38%] color-default bg-white rounded-2xl text-[5rem]"></i>
-                  </a>
+                  </div>
 
-                  {movieTrailers.length > 1 ? (
-                    <a
-                      className="relative"
-                      href={`https://www.youtube.com/watch?v=${movieTrailers[1].key}`}
+                  <div className="px-1 pb-1 pt-3">
+                    <h3
+                      className="
+                      truncate text-sm
+                      font-bold
+                      group-hover:text-red-400
+                    "
+                    >
+                      {cast.name}
+                    </h3>
+
+                    <p
+                      className="
+                      mt-1 truncate
+                      text-xs text-white/40
+                    "
+                    >
+                      {cast.character || "Unknown role"}
+                    </p>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* =====================================================
+          MORE INFO
+      ====================================================== */}
+      <section className="mt-10 px-3">
+        <Subtitle label="More Info" />
+
+        <div
+          className="
+          grid grid-cols-1
+          overflow-hidden rounded-2xl
+          border border-white/[0.05]
+          bg-white/[0.025]
+          sm:grid-cols-2
+          lg:grid-cols-4
+        "
+        >
+          <InfoCard
+            title="Release Date"
+            label={movieInfo.release_date || "Unknown"}
+          />
+
+          <InfoCard title="Runtime" label={formatRuntime(movieInfo.runtime)} />
+
+          <InfoCard title="Budget" label={formatMoney(movieInfo.budget)} />
+
+          <InfoCard title="Revenue" label={formatMoney(movieInfo.revenue)} />
+
+          <InfoCard title="Status" label={movieInfo.status || "Unknown"} />
+
+          <InfoCard
+            title="Languages"
+            label={
+              movieInfo.spoken_languages?.length
+                ? movieInfo.spoken_languages
+                    .map((language) => language.english_name)
+                    .join(", ")
+                : "Unknown"
+            }
+          />
+
+          <InfoCard
+            title="Genres"
+            label={genreNames.length ? genreNames.join(", ") : "Unknown"}
+          />
+
+          <InfoCard
+            title="Production"
+            label={
+              movieInfo.production_companies?.length
+                ? movieInfo.production_companies
+                    .slice(0, 2)
+                    .map((company) => company.name)
+                    .join(", ")
+                : "Unknown"
+            }
+          />
+        </div>
+      </section>
+
+      {/* =====================================================
+          REVIEWS
+      ====================================================== */}
+      {reviews.length > 0 && (
+        <section className="mt-10 px-3">
+          <Subtitle label="Reviews" />
+
+          <div className="columns-1 gap-4 lg:columns-2">
+            {reviews.slice(0, visibleReviews).map((review) => (
+              <ReviewCard
+                key={review.id || review.author}
+                username={review.author}
+                date={review.created_at}
+                content={review.content}
+              />
+            ))}
+          </div>
+
+          {reviews.length > REVIEWS_STEP && (
+            <div className="mt-5 flex justify-center gap-3">
+              {visibleReviews < reviews.length && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleReviews((prev) => prev + REVIEWS_STEP)
+                  }
+                  className="
+              flex items-center gap-2
+              rounded-full border border-white/10
+              bg-white/[0.06] px-6 py-2.5
+              text-sm font-semibold text-white/80
+              transition-all duration-200
+              hover:border-white/20
+              hover:bg-white/10 hover:text-white
+              active:scale-95
+            "
+                >
+                  Show more (
+                  {Math.min(REVIEWS_STEP, reviews.length - visibleReviews)})
+                  <i className="fa fa-chevron-down text-xs" />
+                </button>
+              )}
+
+              {visibleReviews > REVIEWS_STEP && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleReviews(REVIEWS_STEP)}
+                  className="
+              rounded-full px-5 py-2.5
+              text-sm font-semibold text-white/40
+              transition-colors hover:text-white/70
+            "
+                >
+                  Show less
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* =====================================================
+          PICTURES + TRAILERS
+      ====================================================== */}
+      {(posterImages.length > 0 ||
+        backDropImages.length > 0 ||
+        movieTrailers.length > 0) && (
+        <section className="mt-10 px-3">
+          <div
+            className="
+            grid gap-8
+            lg:grid-cols-[1fr_360px]
+          "
+          >
+            {/* Pictures */}
+            {backDropImages.length > 0 && (
+              <div>
+                <Subtitle label="Pictures" />
+
+                <div
+                  className="
+                  grid grid-cols-2
+                  gap-2 sm:gap-3
+                "
+                >
+                  {backDropImages.slice(0, 4).map((image, index) => (
+                    <div
+                      key={image.file_path}
+                      className={`
+                          overflow-hidden
+                          rounded-xl
+                          ${
+                            index === 0
+                              ? "col-span-2 aspect-video"
+                              : "aspect-video"
+                          }
+                        `}
                     >
                       <img
-                        className="border-neutral-300 border-2 rounded-3xl"
-                        src={`https://img.youtube.com/vi/${movieTrailers[1].key}/0.jpg`}
+                        src={`https://image.tmdb.org/t/p/w780/${image.file_path}`}
                         alt=""
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "./images/black_vertical_bg 2.jpg";
-                        }}
+                        className="
+                            h-full w-full
+                            object-cover
+                            transition-transform
+                            duration-500
+                            hover:scale-105
+                          "
                       />
-                      <i className="fab fa-youtube absolute top-[38%] left-[38%] color-default bg-white rounded-2xl text-[5rem]"></i>
-                    </a>
-                  ) : (
-                    <div></div>
-                  )}
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <div></div>
-              )}
-            </section>
-          </section>
+              </div>
+            )}
 
-          <Subtitle label={"Similars"}></Subtitle>
-          <div className="flex gap-x-3 mb-8 no-scrollbar overflow-x-auto">
-            {movieDetails.similarMovies
-              .slice(0, 11)
-              .map((similarMovie, index) => (
-                <MediumCard
-                  key={index}
-                  date={similarMovie.release_date}
-                  imgSrc={`https://image.tmdb.org/t/p/w500/${similarMovie.backdrop_path}`}
-                  title={similarMovie.title}
-                  desc={similarMovie.overview}
-                  ratings={similarMovie.vote_average}
-                  onClick={function () {
-                    navigateTo(
-                      `/movie-info?movieid=${similarMovie.id}&genreid=${similarMovie.genre_ids[0]}`
-                    );
+            {/* Trailers */}
+            {movieTrailers.length > 0 && (
+              <div>
+                <Subtitle label="Trailers" />
 
-                    window.location.reload();
-                  }}
-                ></MediumCard>
-              ))}
+                <div
+                  className="
+                  flex flex-col gap-4
+                "
+                >
+                  {movieTrailers.slice(0, 2).map((trailerItem) => (
+                    <a
+                      key={trailerItem.key}
+                      href={`https://www.youtube.com/watch?v=${trailerItem.key}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="
+                          group relative
+                          overflow-hidden
+                          rounded-2xl
+                          border border-white/[0.06]
+                        "
+                    >
+                      <img
+                        src={`https://img.youtube.com/vi/${trailerItem.key}/hqdefault.jpg`}
+                        alt={trailerItem.name || "Trailer"}
+                        className="
+                            aspect-video
+                            h-full w-full
+                            object-cover
+                            transition-transform
+                            duration-500
+                            group-hover:scale-105
+                          "
+                      />
+
+                      <div
+                        className="
+                          absolute inset-0
+                          flex items-center
+                          justify-center
+                          bg-black/25
+                          transition-colors
+                          group-hover:bg-black/40
+                        "
+                      >
+                        <div
+                          className="
+                            flex h-14 w-14
+                            items-center justify-center
+                            rounded-full
+                            bg-red-500
+                            shadow-xl
+                            shadow-red-500/30
+                            transition-transform
+                            duration-300
+                            group-hover:scale-110
+                          "
+                        >
+                          <i className="fa fa-play text-white" />
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </section>
       )}
+
+      {/* =====================================================
+          SIMILAR MOVIES
+      ====================================================== */}
+      {similarMovies.length > 0 && (
+        <section className="mt-10">
+          <div className="px-3">
+            <Subtitle label="You Might Also Like" />
+          </div>
+
+          <div
+            className="
+            flex gap-4
+            overflow-x-auto
+            px-3 pb-4
+            no-scrollbar
+          "
+          >
+            {similarMovies.slice(0, 12).map((movie) => (
+              <div
+                key={movie.id}
+                className="
+                  w-[75%]
+                  flex-shrink-0
+                  sm:w-[45%]
+                  md:w-[32%]
+                  lg:w-[24%]
+                "
+              >
+                <MediumCard
+                  date={movie.release_date}
+                  imgSrc={
+                    movie.backdrop_path
+                      ? `https://image.tmdb.org/t/p/w780/${movie.backdrop_path}`
+                      : "./images/black_horizontal_bg 2.jpg"
+                  }
+                  title={movie.title}
+                  desc={movie.overview}
+                  ratings={movie.vote_average}
+                  onClick={() => openMovie(movie)}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}
+
+function InfoCard({ title, label }) {
+  return (
+    <div
+      className="
+      border-b border-white/[0.05]
+      p-5
+      sm:p-6
+    "
+    >
+      <h3
+        className="
+        mb-1 text-sm
+        font-semibold text-white/80
+      "
+      >
+        {title}
+      </h3>
+
+      <p
+        className="
+        line-clamp-2
+        text-sm text-white/40
+      "
+      >
+        {label || "Not available"}
+      </p>
     </div>
   );
+}
 
-  function InfoCard({ title, label }) {
-    return (
-      <div className="flex flex-col gap-2 py-4 md:px-8 px-4 rounded-lg">
-        <h2 className="font-bold md:text-lg text-base">{title}</h2>
-        <span className="font-[300] text-sm opacity-70">{label}</span>
+function ReviewCard({ username, date, content, expanded }) {
+  const formattedDate = date ? new Date(date).toLocaleDateString() : "";
+
+  return (
+   <article
+  className="
+    mb-4 w-full break-inside-avoid
+    rounded-2xl
+    border border-white/[0.05]
+    bg-white/[0.025]
+    p-5
+  "
+>
+      <div className="mb-4 flex items-center gap-3">
+        <div
+          className="
+            flex h-11 w-11
+            flex-shrink-0
+            items-center justify-center
+            rounded-full
+            bg-red-500/10
+          "
+        >
+          <i className="fa fa-user text-red-400" />
+        </div>
+
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-bold">
+            {username || "Anonymous"}
+          </h3>
+
+          <p className="text-xs text-white/30">{formattedDate}</p>
+        </div>
       </div>
-    );
-  }
 
-  function ReviewCard({ username, date, imgsrc, content, modify }) {
-    return (
-      <div
-        className={`flex w-[80%] ${modify} flex-shrink-0 flex-col gap-4 bg-[rgb(15,15,15)] p-6 rounded-lg`}
+      <p
+        className={`
+          text-sm leading-6
+          text-white/55
+          whitespace-pre-line
+          ${expanded ? "" : "line-clamp-5"}
+        `}
       >
-        <div className="flex gap-4 items-center">
-          <img
-            className="w-16 h-16 rounded-full"
-            src=".\images\desktop-wallpaper-spiderman-amoled-balck.jpg"
-            alt=""
-          />
-          <div className="flex flex-col">
-            <h1>{username}</h1>
-            <span className="opacity-60 font-[300] text-sm">{date}</span>
-          </div>
-        </div>
-        <div>
-          <span className="font-light text-sm line-clamp-5">{content}</span>
-          <span className="font-light text-sm underline">show more</span>
-        </div>
-      </div>
-    );
-  }
+        {content || "No review content available."}
+      </p>
+    </article>
+  );
 }

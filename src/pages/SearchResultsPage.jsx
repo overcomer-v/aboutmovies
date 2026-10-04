@@ -1,129 +1,264 @@
 import { useEffect, useState } from "react";
-import { HorizontalCard } from "../components/Horizontal-Card";
+
 import { useLocation, useNavigate } from "react-router-dom";
+
 import { fetchSearchQuery } from "../hooks/api";
+
+import { HorizontalCard } from "../components/Horizontal-Card";
 import { Spinner } from "../components/Spinner";
 
 function ResultsPage() {
-  const [searchResults, setSearchResults] = useState([]);
-  const [pageNo, setPageNo] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [AllResults, setAllresults] = useState([]);
   const location = useLocation();
-  const navigateTo = useNavigate();
+  const navigate = useNavigate();
+
   const queryParams = new URLSearchParams(location.search);
-  const query = queryParams.get("query");
+  const query = queryParams.get("query") || "";
+
+  const [allResults, setAllResults] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+
+  const [pageNo, setPageNo] = useState(1);
+
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const [type, setType] = useState("All");
 
+  /*
+   * Fetch search results.
+   *
+   * This is the only place where search data is fetched.
+   */
   useEffect(() => {
-    switch (type) {
-      case "All":
-        setSearchResults(AllResults);
-        break;
-      case "Movies":
-        setSearchResults(AllResults.filter((e) => e.media_type === "movie"));
-        console.log();
-        break;
-      case "TvShows":
-        setSearchResults(AllResults.filter((e) => e.media_type === "tv"));
-        console.log(AllResults.filter((e) => e.media_type === "tv"));
-        break;
+    if (!query.trim()) {
+      setAllResults([]);
+      setSearchResults([]);
+      setLoading(false);
+      return;
     }
-  }, [type]);
 
-  useEffect(() => {
-    loadUpcomingMovies(pageNo);
-  }, [pageNo]);
+    async function loadResults() {
+      try {
+        setLoading(true);
 
-  useEffect(() => {
-    setLoading(true);
+        const res = await fetchSearchQuery(1, query);
 
-    setTimeout(() => {
-      fetchSearchQuery(pageNo, query).then((res) => {
-        setAllresults(res);
-        setSearchResults(res);
-      });
+        setAllResults(res || []);
+        setPageNo(1);
+      } catch (error) {
+        console.error("Failed to search:", error);
 
-      setTimeout(() => {
+        setAllResults([]);
+      } finally {
         setLoading(false);
-      }, 2000);
-    }, 2000);
-  }, [location]);
-  function morePage() {
-    setPageNo((e) => e + 1);
-  }
+      }
+    }
 
-  function loadUpcomingMovies(pageNo) {
-    setLoading(true);
+    loadResults();
+  }, [query]);
 
-    setTimeout(() => {
-      fetchSearchQuery(pageNo, query).then((res) => {
-        console.log(res[3]);
-        setAllresults(res);
-        setSearchResults((e) => [...e, ...res]);
-        setLoading(false);
-      });
+  /*
+   * Filter results whenever:
+   * - the selected type changes
+   * - new search results arrive
+   */
+  useEffect(() => {
+    if (type === "All") {
+      setSearchResults(allResults);
+      return;
+    }
 
-      setTimeout(() => {}, 2000);
-    }, 2000);
-  }
+    if (type === "Movies") {
+      setSearchResults(
+        allResults.filter(
+          (item) => item.media_type === "movie"
+        )
+      );
+      return;
+    }
 
-  function navigateToAboutMovies({ id, genreId, mediaType }) {
-    if (mediaType === "movie") {
-      navigateTo(`/movie-info?movieid=${id}&genreid=${genreId}`);
-    } else if (mediaType === "tv") {
-      navigateTo(`/tvshow-info?tvid=${id}&tv-genreid=${genreId}`);
+    if (type === "TvShows") {
+      setSearchResults(
+        allResults.filter(
+          (item) => item.media_type === "tv"
+        )
+      );
+    }
+  }, [type, allResults]);
+
+  /*
+   * Load the next search page.
+   */
+  async function morePage() {
+    if (loadingMore || !query.trim()) return;
+
+    try {
+      setLoadingMore(true);
+
+      const nextPage = pageNo + 1;
+
+      const res = await fetchSearchQuery(
+        nextPage,
+        query
+      );
+
+      const newResults = res || [];
+
+      setAllResults((current) => [
+        ...current,
+        ...newResults,
+      ]);
+
+      setPageNo(nextPage);
+    } catch (error) {
+      console.error(
+        "Failed to load more search results:",
+        error
+      );
+    } finally {
+      setLoadingMore(false);
     }
   }
 
-  return loading ? (
-    <Spinner className={"text-5xl opacity-85"} />
-  ) : searchResults.length === 0 ? (
-    <div className="flex flex-col items-center">
-      <i className="fa fa-file-fragment text-8xl mb-4"></i>
-      <h2 className="text-3xl font-bold ">Not Found</h2>
-      <p className="opacity-70 font-light">No search results for ${query}</p>
-    </div>
-  ) : (
-    <main className="flex flex-col">
-      <h2 className="my-4 text-lg">Search Results for "{query}"</h2>
-      <TypeTab type={type} setType={setType}></TypeTab>
-      <div className="grid md:grid-cols-2 gap-8">
-        {" "}
-        {searchResults.map((result, index) => {
-          const mediatype = result.media_type;
-          return (
-            <HorizontalCard
-              onClick={() => {
-                navigateToAboutMovies({
-                  id: result.id,
-                  genreId: result.genre_ids[0],
-                  mediaType: result.media_type,
-                });
-              }}
-              key={index}
-              date={
-                mediatype == "movie"
-                  ? result.release_date
-                  : result.first_air_date
-              }
-              imgSrc={`https://image.tmdb.org/t/p/w500/${result.poster_path}`}
-              title={mediatype == "movie" ? result.title : result.name}
-              desc={result.overview}
-              ratings={result.vote_average}
-            ></HorizontalCard>
-          );
-        })}
+  function navigateToAboutMovies(item) {
+    if (!item) return;
+
+    const id = item.id;
+    const genreId = item.genre_ids?.[0];
+
+    if (item.media_type === "movie") {
+      navigate(
+        `/movie-info?movieid=${id}&genreid=${genreId}`
+      );
+    }
+
+    if (item.media_type === "tv") {
+      navigate(
+        `/tvshow-info?tvid=${id}&tv-genreid=${genreId}`
+      );
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Spinner className="text-5xl opacity-85" />
       </div>
-      {loading ? (
-        <div className="spinner mx-auto"></div>
+    );
+  }
+
+  return (
+    <main className="flex w-full flex-col pt-8">
+      {/* Header */}
+      <div className="mb-5">
+        <h1 className="font-nunito text-2xl font-bold lg:text-3xl">
+          Search Results
+        </h1>
+
+        <p className="mt-1 text-sm text-white/40">
+          Results for{" "}
+          <span className="text-white/70">
+            "{query}"
+          </span>
+        </p>
+      </div>
+
+      {/* Filter */}
+      <TypeTab
+        type={type}
+        setType={setType}
+      />
+
+      {/* Empty state */}
+      {searchResults.length === 0 ? (
+        <div className="flex min-h-[45vh] flex-col items-center justify-center text-center">
+          <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.04]">
+            <i className="fa fa-search text-3xl text-white/20" />
+          </div>
+
+          <h2 className="text-2xl font-bold">
+            No results found
+          </h2>
+
+          <p className="mt-2 text-sm text-white/40">
+            No {type === "All" ? "" : type.toLowerCase()}{" "}
+            results for "{query}"
+          </p>
+        </div>
       ) : (
-        <button
-          className="px-8 py-4 bg-default mx-auto my-6 rounded-lg font-bold"
-          onClick={morePage}
-        >
-          Load More
-        </button>
+        <>
+          {/* Results count */}
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-white/40">
+              {searchResults.length} result
+              {searchResults.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+
+          {/* Results */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-5">
+            {searchResults.map((result) => {
+              const mediaType = result.media_type;
+
+              return (
+                <HorizontalCard
+                  key={`${mediaType}-${result.id}`}
+                  onClick={() =>
+                    navigateToAboutMovies(result)
+                  }
+                  date={
+                    mediaType === "movie"
+                      ? result.release_date
+                      : result.first_air_date
+                  }
+                  imgSrc={
+                    result.poster_path
+                      ? `https://image.tmdb.org/t/p/w500/${result.poster_path}`
+                      : undefined
+                  }
+                  title={
+                    mediaType === "movie"
+                      ? result.title
+                      : result.name
+                  }
+                  desc={result.overview}
+                  ratings={result.vote_average}
+                />
+              );
+            })}
+          </div>
+
+          {/* Load more */}
+          <button
+            onClick={morePage}
+            disabled={loadingMore}
+            className="
+              group mx-auto my-8 flex items-center gap-2
+              rounded-full border border-white/10
+              bg-white/[0.04] px-7 py-3
+              text-sm font-semibold text-white/70
+              transition-all duration-200
+              hover:border-red-500/40
+              hover:bg-red-500
+              hover:text-white
+              active:scale-95
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
+          >
+            {loadingMore ? (
+              <>
+                <i className="fa fa-spinner fa-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                Load More
+                <i className="fa fa-angle-down transition-transform duration-200 group-hover:translate-y-0.5" />
+              </>
+            )}
+          </button>
+        </>
       )}
     </main>
   );
@@ -131,34 +266,53 @@ function ResultsPage() {
 
 function TypeTab({ type, setType }) {
   return (
-    <div
-      className={`flex gap-x-4 my-4 [&_h4]:px-6 [&_h4]:py-3 [&_h4]:rounded-lg `}
-    >
-      <h4
-        className={`${type === "All" ? "bg-default" : "bg-neutral-900"}`}
-        onClick={() => {
-          setType("All");
-        }}
+    <div className="mb-6 inline-flex w-fit items-center gap-1 rounded-full border border-white/10 bg-neutral-900/80 p-1 backdrop-blur-md">
+      <button
+        onClick={() => setType("All")}
+        className={`
+          rounded-full px-5 py-2 text-sm font-semibold
+          transition-all duration-200
+          ${
+            type === "All"
+              ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
+              : "text-white/50 hover:text-white"
+          }
+        `}
       >
         All
-      </h4>
-      <h4
-        className={`${type === "Movies" ? "bg-default" : "bg-neutral-900"}`}
-        onClick={() => {
-          setType("Movies");
-        }}
+      </button>
+
+      <button
+        onClick={() => setType("Movies")}
+        className={`
+          rounded-full px-5 py-2 text-sm font-semibold
+          transition-all duration-200
+          ${
+            type === "Movies"
+              ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
+              : "text-white/50 hover:text-white"
+          }
+        `}
       >
-        Movie
-      </h4>
-      <h4
-        className={`${type === "TvShows" ? "bg-default" : "bg-neutral-900"}`}
-        onClick={() => {
-          setType("TvShows");
-        }}
+        Movies
+      </button>
+
+      <button
+        onClick={() => setType("TvShows")}
+        className={`
+          rounded-full px-5 py-2 text-sm font-semibold
+          transition-all duration-200
+          ${
+            type === "TvShows"
+              ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
+              : "text-white/50 hover:text-white"
+          }
+        `}
       >
-        TvShows
-      </h4>
+        TV Shows
+      </button>
     </div>
   );
 }
+
 export default ResultsPage;
