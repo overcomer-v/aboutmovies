@@ -122,7 +122,8 @@ function Navbar({ openNavBar, setNavbarOpen }) {
       {/* Navbar */}
       <aside
         className={`
-          border-r
+          border-r bg-neutral-950/95
+          
           border-white/10
           fixed left-0 top-0 z-[1000]
           h-dvh
@@ -138,7 +139,7 @@ function Navbar({ openNavBar, setNavbarOpen }) {
           className="
             flex h-full flex-col
             border-r border-white/10
-            bg-neutral-950/95
+           
             px-5 py-6
             shadow-2xl
             backdrop-blur-2xl
@@ -232,7 +233,7 @@ function Navbar({ openNavBar, setNavbarOpen }) {
           </nav>
 
           {/* Footer */}
-          <div className="mt-auto pt-6">
+          <div className="mt-auto pt-6 pb-6">
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
