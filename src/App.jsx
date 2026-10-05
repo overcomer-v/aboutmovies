@@ -21,13 +21,13 @@ function App() {
   const [openNavBar, setNavBarOpen] = useState(false);
 
   return (
-    <HashRouter>
+    <HashRouter>s
       <div className="flex h-dvh w-full overflow-hidden bg-neutral-950 text-white">
         {/* Sidebar / Mobile Drawer */}
         <Navbar openNavBar={openNavBar} setNavbarOpen={setNavBarOpen} />
 
         {/* Main Application */}
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden gap-2 px-5">
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden gap-2 md:px-5">
           {/* Header */}
           <Header setMenuOpen={setNavBarOpen} openNavbar={openNavBar} />
 
