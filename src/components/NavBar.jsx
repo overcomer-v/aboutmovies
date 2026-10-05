@@ -9,28 +9,10 @@ const NAV_ITEMS = [
     to: "/",
   },
   {
-    label: "Upcoming",
-    icon: "fa-clock",
+    label: "Explore",
+    icon: "fa-compass",
     id: 1,
-    to: "/upcoming-page",
-  },
-  {
-    label: "Trending",
-    icon: "fa-tv",
-    id: 2,
-    to: "/trendings",
-  },
-  {
-    label: "Popular",
-    icon: "fa-video",
-    id: 3,
-    to: "/popular-page",
-  },
-  {
-    label: "Top Movies",
-    icon: "fa-bullseye",
-    id: 4,
-    to: "/topmovies-page",
+    to: "/explore?type=movie&category=popular",
   },
 ];
 
@@ -38,13 +20,13 @@ const SECONDARY_ITEMS = [
   {
     label: "About Us",
     icon: "fa-info-circle",
-    id: 5,
+    id: 2,
     to: "/aboutus-page",
   },
   {
     label: "Contact Us",
     icon: "fa-envelope",
-    id: 6,
+    id: 3,
     to: "/contactus-page",
   },
 ];
@@ -122,11 +104,12 @@ function Navbar({ openNavBar, setNavbarOpen }) {
       {/* Navbar */}
       <aside
         className={`
-          border-r bg-neutral-950/95
-          
+          border-r 
           border-white/10
           fixed left-0 top-0 z-[1000]
           h-dvh
+          backdrop-blur-2xl
+          no-scrollbar
           overflow-scroll
           w-[80%] max-w-[240px]
           lg:relative lg:z-auto
@@ -140,16 +123,17 @@ function Navbar({ openNavBar, setNavbarOpen }) {
             flex h-full flex-col
             border-r border-white/10
            
-            px-5 py-6
+            md:px-5 py-6
+            px-3
             shadow-2xl
-            backdrop-blur-2xl
+            
             lg:border-r-0
             lg:bg-neutral-950
             lg:shadow-none
           "
         >
           {/* Header */}
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between">
             <button
               type="button"
               onClick={() => navigate("/")}

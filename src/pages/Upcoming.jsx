@@ -1,57 +1,122 @@
 import { useEffect, useState } from "react";
-import { HorizontalCard } from "../components/Horizontal-Card";
-import { fetchUpcomingMovies } from "../hooks/movies";
+
+import { fetchMovies } from "../hooks/movies";
+
 import { CategoriesUi } from "../components/CategriesUi";
-import { useNavigate } from "react-router-dom";
+import { SortBar } from "../components/SortBar";
+
+import { MOVIE_SORT_OPTIONS } from "../constants/sortOptions";
+
+import { useLocation, useNavigate } from "react-router-dom";
 
 function UpcomingPage() {
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [upcomingMoviesList, setUpcomingMoviesList] = useState([]);
+
   const [pageNo, setPageNo] = useState(1);
+
   const [loading, setLoading] = useState(true);
 
+  const [sortBy, setSortBy] = useState(() => {
+    const queryParams = new URLSearchParams(location.search);
+
+    return (
+      queryParams.get("sort") ||
+      "primary_release_date.asc"
+    );
+  });
+
+  // Keep sorting synced with the URL
   useEffect(() => {
-    loadUpcomingMovies(pageNo);
-  }, [pageNo]);
+    const queryParams = new URLSearchParams(location.search);
+
+    setSortBy(
+      queryParams.get("sort") ||
+        "primary_release_date.asc"
+    );
+  }, [location.search]);
+
+  // Load upcoming movies
+  useEffect(() => {
+    loadUpcomingMovies();
+  }, [pageNo, sortBy]);
+
+  async function loadUpcomingMovies() {
+    try {
+      setLoading(true);
+
+      const res = await fetchMovies({
+        page: pageNo,
+        sortBy,
+      });
+
+      setUpcomingMoviesList((current) =>
+        pageNo === 1
+          ? res || []
+          : [...current, ...(res || [])]
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load upcoming movies:",
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleSortChange(newSort) {
+    setSortBy(newSort);
+
+    setPageNo(1);
+
+    setUpcomingMoviesList([]);
+
+    const queryParams = new URLSearchParams(
+      location.search
+    );
+
+    queryParams.set("sort", newSort);
+
+    navigate(
+      `${location.pathname}?${queryParams.toString()}`,
+      { replace: true }
+    );
+  }
 
   function morePage() {
-    setPageNo((e) => e + 1);
+    setPageNo((current) => current + 1);
   }
 
-  function loadUpcomingMovies(pageNo) {
-    setLoading(true);
+  function navigateToAbout(item) {
+    if (!item) return;
 
-    setTimeout(() => {
-      fetchUpcomingMovies(pageNo).then((res) => {
-        setUpcomingMoviesList((e) => [...e, ...res]);
-        setTimeout(() => {
-          setLoading(false);
-        }, 2000);
-        console.log(res);
-      });
-    }, 2000);
-  }
+    const id = item.id;
+    const genreId = item.genre_ids?.[0];
 
-   function navigateToAbout({ e }) {
-
-      const id = upcomingMoviesList[e].id;
-      console.log(id)
-      const genreId = upcomingMoviesList[e].genre_ids[0];
-      navigator(`/movie-info?movieid=${id}&genreid=${genreId}`);
-   
+    navigate(
+      `/movie-info?movieid=${id}&genreid=${genreId || ""}`
+    );
   }
 
   return (
-    <CategoriesUi
-      itemsList={upcomingMoviesList}
-      listType={"Movies"}
-      morePage={morePage}
-      isloading={loading}
-      onItemsClick={(index)=>{
-        navigateToAbout({e:index});
-      }}
-    ></CategoriesUi>
+    <div className="w-full">
+      <SortBar
+        value={sortBy}
+        onChange={handleSortChange}
+        options={MOVIE_SORT_OPTIONS}
+      />
+
+      <CategoriesUi
+        itemsList={upcomingMoviesList}
+        listType="Movies"
+        morePage={morePage}
+        isloading={loading}
+        onItemsClick={navigateToAbout}
+      />
+    </div>
   );
 }
 

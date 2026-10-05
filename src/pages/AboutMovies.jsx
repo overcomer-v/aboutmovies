@@ -624,6 +624,7 @@ export function AboutMovies() {
                             object-cover
                             transition-transform
                             duration-500
+                            bg-neutral-600
                             hover:scale-105
                           "
                       />

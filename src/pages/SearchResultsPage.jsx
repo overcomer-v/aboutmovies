@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -6,33 +6,64 @@ import { fetchSearchQuery } from "../hooks/api";
 
 import { HorizontalCard } from "../components/Horizontal-Card";
 import { Spinner } from "../components/Spinner";
+import { SortBar } from "../components/SortBar";
+
+import { SEARCH_SORT_OPTIONS } from "../constants/sortOptions";
 
 function ResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
   const queryParams = new URLSearchParams(location.search);
+
   const query = queryParams.get("query") || "";
 
   const [allResults, setAllResults] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
 
   const [pageNo, setPageNo] = useState(1);
 
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const [type, setType] = useState("All");
+  const [type, setType] = useState(() => {
+    const reqType = queryParams.get("type");
+
+    return ["Movies", "TvShows"].includes(reqType)
+      ? reqType
+      : "All";
+  });
+
+  const [sortBy, setSortBy] = useState(() => {
+    return queryParams.get("sort") || "relevance";
+  });
+
+  /*
+   * Keep filters synced with the URL.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    const reqType = params.get("type");
+    const urlSort = params.get("sort");
+
+    setType(
+      reqType === "Movies" || reqType === "TvShows"
+        ? reqType
+        : "All"
+    );
+
+    setSortBy(urlSort || "relevance");
+  }, [location.search]);
 
   /*
    * Fetch search results.
    *
-   * This is the only place where search data is fetched.
+   * Search data is fetched only when the query changes.
    */
   useEffect(() => {
     if (!query.trim()) {
       setAllResults([]);
-      setSearchResults([]);
+      setPageNo(1);
       setLoading(false);
       return;
     }
@@ -49,6 +80,7 @@ function ResultsPage() {
         console.error("Failed to search:", error);
 
         setAllResults([]);
+        setPageNo(1);
       } finally {
         setLoading(false);
       }
@@ -58,33 +90,138 @@ function ResultsPage() {
   }, [query]);
 
   /*
-   * Filter results whenever:
-   * - the selected type changes
-   * - new search results arrive
+   * Filter + sort the accumulated search results.
    */
-  useEffect(() => {
-    if (type === "All") {
-      setSearchResults(allResults);
-      return;
-    }
+  const searchResults = useMemo(() => {
+    let results = [...allResults];
 
+    // Filter by media type
     if (type === "Movies") {
-      setSearchResults(
-        allResults.filter(
-          (item) => item.media_type === "movie"
-        )
+      results = results.filter(
+        (item) => item.media_type === "movie"
       );
-      return;
     }
 
     if (type === "TvShows") {
-      setSearchResults(
-        allResults.filter(
-          (item) => item.media_type === "tv"
-        )
+      results = results.filter(
+        (item) => item.media_type === "tv"
       );
     }
-  }, [type, allResults]);
+
+    // Relevance means keep TMDB's original ordering.
+    if (sortBy === "relevance") {
+      return results;
+    }
+
+    if (sortBy === "popularity.desc") {
+      return results.sort(
+        (a, b) =>
+          (b.popularity || 0) -
+          (a.popularity || 0)
+      );
+    }
+
+    if (sortBy === "vote_average.desc") {
+      return results.sort(
+        (a, b) =>
+          (b.vote_average || 0) -
+          (a.vote_average || 0)
+      );
+    }
+
+    if (
+      sortBy === "date.desc" ||
+      sortBy === "date.asc"
+    ) {
+      return results.sort((a, b) => {
+        const dateA =
+          a.media_type === "movie"
+            ? a.release_date
+            : a.first_air_date;
+
+        const dateB =
+          b.media_type === "movie"
+            ? b.release_date
+            : b.first_air_date;
+
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+
+        return sortBy === "date.desc"
+          ? dateB.localeCompare(dateA)
+          : dateA.localeCompare(dateB);
+      });
+    }
+
+    if (
+      sortBy === "title.asc" ||
+      sortBy === "title.desc"
+    ) {
+      return results.sort((a, b) => {
+        const titleA = (
+          a.media_type === "movie"
+            ? a.title
+            : a.name
+        ) || "";
+
+        const titleB = (
+          b.media_type === "movie"
+            ? b.title
+            : b.name
+        ) || "";
+
+        return sortBy === "title.asc"
+          ? titleA.localeCompare(titleB)
+          : titleB.localeCompare(titleA);
+      });
+    }
+
+    return results;
+  }, [allResults, type, sortBy]);
+
+  /*
+   * Change Movie / TV filter.
+   */
+  function handleTypeChange(nextType) {
+    setType(nextType);
+
+    const params = new URLSearchParams(
+      location.search
+    );
+
+    if (nextType === "All") {
+      params.delete("type");
+    } else {
+      params.set("type", nextType);
+    }
+
+    navigate(
+      `${location.pathname}?${params.toString()}`,
+      { replace: true }
+    );
+  }
+
+  /*
+   * Change sorting.
+   */
+  function handleSortChange(newSort) {
+    setSortBy(newSort);
+
+    const params = new URLSearchParams(
+      location.search
+    );
+
+    if (newSort === "relevance") {
+      params.delete("sort");
+    } else {
+      params.set("sort", newSort);
+    }
+
+    navigate(
+      `${location.pathname}?${params.toString()}`,
+      { replace: true }
+    );
+  }
 
   /*
    * Load the next search page.
@@ -120,7 +257,10 @@ function ResultsPage() {
     }
   }
 
-  function navigateToAboutMovies(item) {
+  /*
+   * Navigate to the correct detail page.
+   */
+  function navigateToAbout(item) {
     if (!item) return;
 
     const id = item.id;
@@ -128,20 +268,20 @@ function ResultsPage() {
 
     if (item.media_type === "movie") {
       navigate(
-        `/movie-info?movieid=${id}&genreid=${genreId}`
+        `/movie-info?movieid=${id}&genreid=${genreId || ""}`
       );
     }
 
     if (item.media_type === "tv") {
       navigate(
-        `/tvshow-info?tvid=${id}&tv-genreid=${genreId}`
+        `/tvshow-info?tvid=${id}&tv-genreid=${genreId || ""}`
       );
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <Spinner className="text-5xl opacity-85" />
       </div>
     );
@@ -163,11 +303,19 @@ function ResultsPage() {
         </p>
       </div>
 
-      {/* Filter */}
-      <TypeTab
-        type={type}
-        setType={setType}
-      />
+      {/* Filters */}
+      <div className="flex flex-col gap-5">
+        <TypeTab
+          type={type}
+          setType={handleTypeChange}
+        />
+
+        <SortBar
+          value={sortBy}
+          onChange={handleSortChange}
+          options={SEARCH_SORT_OPTIONS}
+        />
+      </div>
 
       {/* Empty state */}
       {searchResults.length === 0 ? (
@@ -181,17 +329,22 @@ function ResultsPage() {
           </h2>
 
           <p className="mt-2 text-sm text-white/40">
-            No {type === "All" ? "" : type.toLowerCase()}{" "}
+            No{" "}
+            {type === "All"
+              ? ""
+              : type.toLowerCase()}{" "}
             results for "{query}"
           </p>
         </div>
       ) : (
         <>
           {/* Results count */}
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 mt-2 flex items-center justify-between">
             <p className="text-sm text-white/40">
               {searchResults.length} result
-              {searchResults.length !== 1 ? "s" : ""}
+              {searchResults.length !== 1
+                ? "s"
+                : ""}
             </p>
           </div>
 
@@ -200,11 +353,23 @@ function ResultsPage() {
             {searchResults.map((result) => {
               const mediaType = result.media_type;
 
+              /*
+               * TMDB can return people from multi-search.
+               * We don't currently have a person detail page,
+               * so skip them.
+               */
+              if (
+                mediaType !== "movie" &&
+                mediaType !== "tv"
+              ) {
+                return null;
+              }
+
               return (
                 <HorizontalCard
                   key={`${mediaType}-${result.id}`}
                   onClick={() =>
-                    navigateToAboutMovies(result)
+                    navigateToAbout(result)
                   }
                   date={
                     mediaType === "movie"
@@ -266,7 +431,7 @@ function ResultsPage() {
 
 function TypeTab({ type, setType }) {
   return (
-    <div className="mb-6 inline-flex w-fit items-center gap-1 rounded-full border border-white/10 bg-neutral-900/80 p-1 backdrop-blur-md">
+    <div className="mb-1 inline-flex w-fit items-center gap-1 rounded-full border border-white/10 bg-neutral-900/80 p-1 backdrop-blur-md">
       <button
         onClick={() => setType("All")}
         className={`

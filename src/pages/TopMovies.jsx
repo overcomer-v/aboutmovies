@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
 
-import { fetchTopMovies } from "../hooks/movies";
+import { fetchMovies } from "../hooks/movies";
 import { fetchTopTvs } from "../hooks/tvShows";
+
 import { CategoriesUi } from "../components/CategriesUi";
+import { SortBar } from "../components/SortBar";
+
+import {
+  MOVIE_SORT_OPTIONS,
+  TV_SORT_OPTIONS,
+} from "../constants/sortOptions";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -25,34 +32,58 @@ function TopMoviesPage() {
     return reqType === "TvShows" ? "TvShows" : "Movies";
   });
 
-  // Keep Movie / TV selection synced with the URL
+  const [sortBy, setSortBy] = useState(() => {
+    const queryParams = new URLSearchParams(location.search);
+
+    // Top Movies should start with Top Rated.
+    return queryParams.get("sort") || "vote_average.desc";
+  });
+
+  // Keep Movie / TV selection and sorting synced with the URL
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
+
     const reqType = queryParams.get("type");
+    const urlSort = queryParams.get("sort");
 
     setType(reqType === "TvShows" ? "TvShows" : "Movies");
+
+    setSortBy(
+      urlSort ||
+        (reqType === "TvShows"
+          ? "popularity.desc"
+          : "vote_average.desc")
+    );
   }, [location.search]);
 
   // Load movies
   useEffect(() => {
+    if (type !== "Movies") return;
+
     loadTopMovies();
-  }, [moviesPageNo]);
+  }, [moviesPageNo, sortBy, type]);
 
   // Load TV shows
   useEffect(() => {
+    if (type !== "TvShows") return;
+
     loadTopTvs();
-  }, [tvPageNo]);
+  }, [tvPageNo, type]);
 
   async function loadTopMovies() {
     try {
       setLoading(true);
 
-      const res = await fetchTopMovies(moviesPageNo);
+      const res = await fetchMovies({
+        page: moviesPageNo,
+        sortBy,
+      });
 
-      setTopMoviesList((current) => [
-        ...current,
-        ...(res || []),
-      ]);
+      setTopMoviesList((current) =>
+        moviesPageNo === 1
+          ? res || []
+          : [...current, ...(res || [])]
+      );
     } catch (error) {
       console.error("Failed to load top movies:", error);
     } finally {
@@ -66,15 +97,63 @@ function TopMoviesPage() {
 
       const res = await fetchTopTvs(tvPageNo);
 
-      setTopTvsList((current) => [
-        ...current,
-        ...(res || []),
-      ]);
+      setTopTvsList((current) =>
+        tvPageNo === 1
+          ? res || []
+          : [...current, ...(res || [])]
+      );
     } catch (error) {
       console.error("Failed to load top TV shows:", error);
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleSortChange(newSort) {
+    setSortBy(newSort);
+
+    setMoviesPageNo(1);
+    setTvPageNo(1);
+
+    setTopMoviesList([]);
+    setTopTvsList([]);
+
+    const queryParams = new URLSearchParams(location.search);
+
+    queryParams.set("sort", newSort);
+
+    navigate(
+      `${location.pathname}?${queryParams.toString()}`,
+      { replace: true }
+    );
+  }
+
+  function handleTypeChange(nextType) {
+    setType(nextType);
+
+    setMoviesPageNo(1);
+    setTvPageNo(1);
+
+    setTopMoviesList([]);
+    setTopTvsList([]);
+
+    const queryParams = new URLSearchParams(location.search);
+
+    queryParams.set("type", nextType);
+
+    // Give each content type a sensible default.
+    if (nextType === "Movies") {
+      queryParams.set("sort", "vote_average.desc");
+      setSortBy("vote_average.desc");
+    } else {
+      queryParams.set("sort", "popularity.desc");
+      setSortBy("popularity.desc");
+    }
+
+    navigate(
+      `${location.pathname}?${queryParams.toString()}`,
+      { replace: true }
+    );
   }
 
   function morePage() {
@@ -93,14 +172,14 @@ function TopMoviesPage() {
       const genreId = item.genre_ids?.[0];
 
       navigate(
-        `/movie-info?movieid=${id}&genreid=${genreId}`
+        `/movie-info?movieid=${id}&genreid=${genreId || ""}`
       );
     } else {
       const id = item.id;
       const genreId = item.genre_ids?.[0];
 
       navigate(
-        `/tvshow-info?tvid=${id}&tv-genreid=${genreId}`
+        `/tvshow-info?tvid=${id}&tv-genreid=${genreId || ""}`
       );
     }
   }
@@ -110,17 +189,28 @@ function TopMoviesPage() {
       ? topMoviesList
       : topTvsList;
 
+  const currentSortOptions =
+    type === "Movies"
+      ? MOVIE_SORT_OPTIONS
+      : TV_SORT_OPTIONS;
+
   return (
-    <CategoriesUi
-      itemsList={currentList}
-      morePage={morePage}
-      isloading={loading}
-      listType={type}
-      setListType={setType}
-      onItemsClick={(item) => {
-        navigateToAbout(item);
-      }}
-    />
+    <div className="w-full">
+      <SortBar
+        value={sortBy}
+        onChange={handleSortChange}
+        options={currentSortOptions}
+      />
+
+      <CategoriesUi
+        itemsList={currentList}
+        morePage={morePage}
+        isloading={loading}
+        listType={type}
+        setListType={handleTypeChange}
+        onItemsClick={navigateToAbout}
+      />
+    </div>
   );
 }
 

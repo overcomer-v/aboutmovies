@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
-import { fetchPopularMovies } from "../hooks/movies";
-import { CategoriesUi } from "../components/CategriesUi";
-import { fetchPopularTvs } from "../hooks/tvShows";
 import { useLocation, useNavigate } from "react-router-dom";
+
+import { fetchMovies } from "../hooks/movies";
+import { fetchPopularTvs } from "../hooks/tvShows";
+
+import { CategoriesUi } from "../components/CategriesUi";
+import { SortBar } from "../components/SortBar";
+
+import { MOVIE_SORT_OPTIONS } from "../constants/sortOptions";
 
 function PopularPage() {
   const navigate = useNavigate();
@@ -11,84 +16,103 @@ function PopularPage() {
   const [popularMoviesList, setPopularMoviesList] = useState([]);
   const [popularTvsList, setPopularTvsList] = useState([]);
 
-  const [tvPageNo, setTvPageNo] = useState(1);
   const [moviesPageNo, setMoviesPageNo] = useState(1);
+  const [tvPageNo, setTvPageNo] = useState(1);
 
   const [loading, setLoading] = useState(true);
 
   const [type, setType] = useState(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const reqType = queryParams.get("type");
+    const params = new URLSearchParams(location.search);
+    const reqType = params.get("type");
 
-    return reqType === "TvShows"
-      ? "TvShows"
-      : "Movies";
+    return reqType === "TvShows" ? "TvShows" : "Movies";
   });
 
-
-  /* =========================================================
-     LOAD MOVIES
-  ========================================================= */
+  const [sortBy, setSortBy] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get("sort") || "popularity.desc";
+  }); // --------------------------------
+  // Load Movies
+  // --------------------------------
 
   useEffect(() => {
-    loadPopularMovies();
-  }, [moviesPageNo]);
+    if (type !== "Movies") return;
 
+    loadPopularMovies();
+  }, [moviesPageNo, sortBy, type]);
 
   async function loadPopularMovies() {
     try {
       setLoading(true);
 
-      const res = await fetchPopularMovies(moviesPageNo);
+      const results = await fetchMovies({
+        page: moviesPageNo,
+        sortBy,
+      });
 
-      setPopularMoviesList((current) => [
-        ...current,
-        ...(res || []),
-      ]);
-    } catch (error) {
-      console.error(
-        "Failed to load popular movies:",
-        error
+      setPopularMoviesList((current) =>
+        moviesPageNo === 1 ? results : [...current, ...results],
       );
+    } catch (error) {
+      console.error("Failed to load popular movies:", error);
     } finally {
       setLoading(false);
     }
   }
 
-
-  /* =========================================================
-     LOAD TV SHOWS
-  ========================================================= */
+  // --------------------------------
+  // Load TV
+  // --------------------------------
 
   useEffect(() => {
-    loadPopularTvs();
-  }, [tvPageNo]);
+    const params = new URLSearchParams(location.search);
+    const urlSort = params.get("sort");
 
+    setSortBy(urlSort || "popularity.desc");
+  }, [location.search]);
+
+  useEffect(() => {
+    if (type !== "TvShows") return;
+
+    loadPopularTvs();
+  }, [tvPageNo, type]);
 
   async function loadPopularTvs() {
     try {
       setLoading(true);
 
-      const res = await fetchPopularTvs(tvPageNo);
+      const results = await fetchPopularTvs(tvPageNo);
 
-      setPopularTvsList((current) => [
-        ...current,
-        ...(res || []),
-      ]);
-    } catch (error) {
-      console.error(
-        "Failed to load popular TV shows:",
-        error
+      setPopularTvsList((current) =>
+        tvPageNo === 1 ? results : [...current, ...results],
       );
+    } catch (error) {
+      console.error("Failed to load popular TV shows:", error);
     } finally {
       setLoading(false);
     }
   }
 
+  // --------------------------------
+  // Change Sorting
+  // --------------------------------
 
-  /* =========================================================
-     LOAD MORE
-  ========================================================= */
+  function handleSortChange(newSort) {
+    setSortBy(newSort);
+
+    setMoviesPageNo(1);
+    setPopularMoviesList([]);
+
+    const params = new URLSearchParams(location.search);
+
+    params.set("sort", newSort);
+
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  }
+
+  // --------------------------------
+  // Load More
+  // --------------------------------
 
   function morePage() {
     if (type === "Movies") {
@@ -98,10 +122,9 @@ function PopularPage() {
     }
   }
 
-
-  /* =========================================================
-     CARD CLICK
-  ========================================================= */
+  // --------------------------------
+  // Navigate to Detail Page
+  // --------------------------------
 
   function navigateToAbout(item) {
     if (!item) return;
@@ -110,43 +133,42 @@ function PopularPage() {
       const id = item.id;
       const genreId = item.genre_ids?.[0];
 
-      navigate(
-        `/movie-info?movieid=${id}&genreid=${genreId}`
-      );
+      navigate(`/movie-info?movieid=${id}&genreid=${genreId || ""}`);
     }
 
     if (type === "TvShows") {
       const id = item.id;
       const genreId = item.genre_ids?.[0];
 
-      navigate(
-        `/tvshow-info?tvid=${id}&tv-genreid=${genreId}`
-      );
+      navigate(`/tvshow-info?tvid=${id}&tv-genreid=${genreId || ""}`);
     }
   }
 
+  // --------------------------------
+  // Current List
+  // --------------------------------
 
-  /* =========================================================
-     CURRENT LIST
-  ========================================================= */
-
-  const currentList =
-    type === "Movies"
-      ? popularMoviesList
-      : popularTvsList;
-
+  const currentList = type === "Movies" ? popularMoviesList : popularTvsList;
 
   return (
-    <CategoriesUi
-      itemsList={currentList}
-      morePage={morePage}
-      isloading={loading}
-      listType={type}
-      setListType={setType}
-      onItemsClick={(item) => {
-        navigateToAbout(item);
-      }}
-    />
+    <main className="w-full">
+      {type === "Movies" && (
+        <SortBar
+          value={sortBy}
+          onChange={handleSortChange}
+          options={MOVIE_SORT_OPTIONS}
+        />
+      )}
+
+      <CategoriesUi
+        itemsList={currentList}
+        morePage={morePage}
+        isloading={loading}
+        listType={type}
+        setListType={setType}
+        onItemsClick={navigateToAbout}
+      />
+    </main>
   );
 }
 

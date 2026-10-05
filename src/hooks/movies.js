@@ -34,7 +34,6 @@ function reducer(state, action) {
 }
 
 export function useMoviesInfo(movieId, movieGenreId) {
-    
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
@@ -63,7 +62,7 @@ export function useMoviesInfo(movieId, movieGenreId) {
             movieInfo: movieInfo,
             genres: movieInfo.genres,
             reviews: movieReviews,
-            isLoading:false,
+            isLoading: false,
             backDropImages: pics.backdrops,
             posterImages: pics.posters,
             similarMovies: similarMovies,
@@ -76,14 +75,12 @@ export function useMoviesInfo(movieId, movieGenreId) {
       } catch (error) {
         console.error("Error Fetching", error);
       }
-
     }
     fetchMovieInfos();
-  },[]);
+  }, []);
 
   return state;
 }
-
 
 export async function fetchMovieGenres() {
   const url = `https://api.themoviedb.org/3/genre/movie/list`;
@@ -143,12 +140,24 @@ export async function fetchMoviePictures(id) {
   return movieImages;
 }
 
-export async function fetchMoviesByGenres(genreId,pageNo=1) {
-  const url = `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&page=${pageNo}`;
+export async function fetchMoviesByGenres(
+  genreId,
+  pageNo = 1,
+  sortBy = "popularity.desc"
+) {
+  const params = new URLSearchParams({
+    with_genres: genreId,
+    page: pageNo,
+    sort_by: sortBy,
+  });
+
+  const url = `https://api.themoviedb.org/3/discover/movie?${params.toString()}`;
+
   const movies = await infoFetcher(url);
-  console.log(movies);
+
   return movies.results;
 }
+
 
 export async function fetchSimilarMovies(genreId) {
   const url = `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`;
@@ -160,4 +169,43 @@ export async function fetchMovieTrailers(id) {
   const url = `https://api.themoviedb.org/3/movie/${id}/videos`;
   const movieTrailers = await infoFetcher(url);
   return movieTrailers.results.filter((e) => e.site === "YouTube");
+}
+
+export async function fetchMovies({
+  page = 1,
+  sortBy = "popularity.desc",
+  genreId = "",
+  year = "",
+  minRating = "",
+} = {}) {
+  const params = new URLSearchParams({
+    page,
+    sort_by: sortBy,
+  });
+
+  if (genreId) {
+    params.append("with_genres", genreId);
+  }
+
+  if (year) {
+    params.append("primary_release_year", year);
+  }
+
+  if (minRating) {
+    params.append("vote_average.gte", minRating);
+  }
+
+  const url = `https://api.themoviedb.org/3/discover/movie?${params.toString()}`;
+
+  const result = await infoFetcher(url);
+
+  return result.results;
+}
+
+// movies.js
+
+export async function fetchTrendingMovies(pageNo = 1) {
+  const url = `https://api.themoviedb.org/3/trending/movie/week?page=${pageNo}`;
+  const movies = await infoFetcher(url);
+  return movies.results;
 }
