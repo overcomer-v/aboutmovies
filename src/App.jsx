@@ -21,7 +21,7 @@ function App() {
   const [openNavBar, setNavBarOpen] = useState(false);
 
   return (
-    <HashRouter>s
+    <HashRouter>
       <div className="flex h-dvh w-full overflow-hidden bg-neutral-950 text-white">
         {/* Sidebar / Mobile Drawer */}
         <Navbar openNavBar={openNavBar} setNavbarOpen={setNavBarOpen} />
