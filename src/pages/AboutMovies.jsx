@@ -340,7 +340,7 @@ export function AboutMovies() {
       {/* =====================================================
           MOBILE OVERVIEW + GENRES
       ====================================================== */}
-      <section className="px-3 md:hidden">
+      <section className="px-3 md:hidden space-y-8">
         {genres.length > 0 && (
           <div
             className="

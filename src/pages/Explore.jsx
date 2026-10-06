@@ -263,7 +263,7 @@ export function Explore() {
         })}
       </div>
       {/* Categories */}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
+      <div className="mb-6 flex gap-2 flex-wrap pb-1 ">
         {categories.map((item) => {
           const active = item.value === category;
 
@@ -420,11 +420,13 @@ export function Explore() {
     </div>
 
     {/* Sort */}
-    <SortBar
+   <div className="max-w-36">
+     <SortBar
       value={sort}
       onChange={handleSortChange}
       options={sortOptions}
     />
+   </div>
   </div>
 </div>
 
