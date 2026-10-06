@@ -27,12 +27,12 @@ function App() {
         <Navbar openNavBar={openNavBar} setNavbarOpen={setNavBarOpen} />
 
         {/* Main Application */}
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden gap-2 px-3 md:px-5">
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden gap-2  md:px-5">
           {/* Header */}
           <Header setMenuOpen={setNavBarOpen} openNavbar={openNavBar} />
 
           {/* Page Content */}
-          <div className="min-h-0 flex-1 overflow-y-auto lg:px-5">
+          <div className="min-h-0 flex-1 overflow-y-auto lg:px-5 px-3">
             <Routes>
               <Route path="/" element={<Home />} />
 
